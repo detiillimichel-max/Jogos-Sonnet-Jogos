@@ -1,0 +1,110 @@
+/* ══════════════════════════════════════
+   game.css — Grid, células, animações
+══════════════════════════════════════ */
+
+/* ── Container ───────────────────────── */
+.grid-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s2);
+  overflow: hidden;
+}
+
+/* ── Grid ────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--gs), 1fr);
+  gap: clamp(2px, 0.5vw, 4px);
+  width: min(
+    calc(100vw - var(--s3) * 2),
+    calc(100dvh - 180px)
+  );
+  aspect-ratio: 1 / 1;
+  touch-action: none; /* evita scroll durante arrastar */
+}
+
+/* ── Célula ──────────────────────────── */
+.cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: var(--font-mono);
+  font-size: clamp(9px, 2.8vw, 18px);
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 0;
+
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: clamp(3px, 1vw, 6px);
+
+  cursor: default;
+  transition:
+    background 0.12s,
+    color 0.12s,
+    border-color 0.12s,
+    box-shadow 0.12s,
+    transform 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Selecionando ────────────────────── */
+.cell.is-selecting {
+  background: rgba(0, 229, 255, 0.15);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.35), inset 0 0 8px rgba(0, 229, 255, 0.1);
+  transform: scale(1.06);
+  z-index: 2;
+}
+
+/* ── Primeira célula selecionada (destaque especial) */
+.cell.is-selecting-start {
+  background: rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
+}
+
+/* ── Palavra encontrada (6 cores) ───── */
+.cell.found-0 { background: rgba(0,229,255,0.22);  border-color: var(--f0); color: var(--f0); box-shadow: 0 0 8px rgba(0,229,255,0.4); }
+.cell.found-1 { background: rgba(255,77,109,0.22); border-color: var(--f1); color: var(--f1); box-shadow: 0 0 8px rgba(255,77,109,0.4); }
+.cell.found-2 { background: rgba(57,245,135,0.22); border-color: var(--f2); color: var(--f2); box-shadow: 0 0 8px rgba(57,245,135,0.4); }
+.cell.found-3 { background: rgba(255,224,51,0.22); border-color: var(--f3); color: var(--f3); box-shadow: 0 0 8px rgba(255,224,51,0.4); }
+.cell.found-4 { background: rgba(180,77,255,0.22); border-color: var(--f4); color: var(--f4); box-shadow: 0 0 8px rgba(180,77,255,0.4); }
+.cell.found-5 { background: rgba(255,140,26,0.22); border-color: var(--f5); color: var(--f5); box-shadow: 0 0 8px rgba(255,140,26,0.4); }
+
+/* ── Animação de entrada da célula ───── */
+.cell {
+  animation: cellIn 0.4s var(--ease) both;
+  animation-delay: calc(var(--ci, 0) * 8ms);
+}
+@keyframes cellIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Célula encontrada (pop!) ────────── */
+.cell.do-pop {
+  animation: cellPop 0.35s var(--ease);
+}
+@keyframes cellPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* ── Shake de erro ───────────────────── */
+.grid.do-shake {
+  animation: gridShake 0.35s var(--ease);
+}
+@keyframes gridShake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-8px); }
+  40%     { transform: translateX(8px); }
+  60%     { transform: translateX(-5px); }
+  80%     { transform: translateX(5px); }
+    }
