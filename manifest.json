@@ -1,0 +1,53 @@
+{
+  "name": "Elo Palavras",
+  "short_name": "EloPalavras",
+  "description": "Jogo de caça-palavras neon com combos, moedas e múltiplos temas. Encontre · Conecte · Vença.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "portrait-primary",
+  "background_color": "#060514",
+  "theme_color": "#060514",
+  "lang": "pt-BR",
+  "categories": ["games", "entertainment", "education"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tela inicial do Elo Palavras"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Jogar Animais",
+      "short_name": "Animais",
+      "description": "Iniciar jogo com tema Animais",
+      "url": "/?tema=animais",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Jogar Frutas",
+      "short_name": "Frutas",
+      "description": "Iniciar jogo com tema Frutas",
+      "url": "/?tema=frutas",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
+}
