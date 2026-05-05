@@ -1,0 +1,63 @@
+/* ══════════════════════════════════════
+   global.css — Design tokens + reset
+══════════════════════════════════════ */
+:root {
+  /* Fundo */
+  --bg:        #060514;
+  --bg-card:   #0e0b25;
+  --bg-elev:   #19163a;
+  --border:    #2a256b;
+
+  /* Neon palette */
+  --cyan:    #00e5ff;
+  --purple:  #b44dff;
+  --pink:    #ff4da6;
+  --yellow:  #ffe033;
+  --green:   #39f587;
+  --orange:  #ff8c1a;
+
+  /* Cores de palavra encontrada */
+  --f0: #00e5ff;
+  --f1: #ff4d6d;
+  --f2: #39f587;
+  --f3: #ffe033;
+  --f4: #b44dff;
+  --f5: #ff8c1a;
+
+  /* Texto */
+  --text:      #ddd8ff;
+  --text-dim:  #6461a8;
+  --text-off:  #302d68;
+
+  /* Tipografia */
+  --font-game: 'Exo 2', sans-serif;
+  --font-ui:   'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  /* Espaço */
+  --s1: 4px;  --s2: 8px;  --s3: 16px;
+  --s4: 24px; --s5: 40px;
+
+  /* Raio */
+  --r1: 6px; --r2: 12px; --r3: 20px; --rf: 9999px;
+
+  /* Animação */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button { cursor: pointer; font-family: var(--font-ui); border: none; background: none; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: var(--r1); }
