@@ -7,7 +7,15 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="EloPalavras" />
   <title>Elo Palavras</title>
+
+  <!-- ✅ LINHA 1 — Manifest PWA (estava faltando) -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- ✅ LINHA 2 — Ícone para iOS (estava faltando) -->
+  <link rel="apple-touch-icon" href="icon-192-2.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,700;0,900;1,900&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet" />
@@ -17,9 +25,7 @@
 </head>
 <body>
 
-  <!-- ══════════════════════════════════
-       HOME
-  ══════════════════════════════════ -->
+  <!-- HOME -->
   <div class="screen screen-home is-active" id="screenHome">
     <div class="home-glow home-glow--1"></div>
     <div class="home-glow home-glow--2"></div>
@@ -31,9 +37,7 @@
       <p class="home-tagline">Encontre · Conecte · Vença</p>
     </header>
 
-    <div class="theme-grid" id="themeGrid">
-      <!-- Temas injetados pelo screens.js -->
-    </div>
+    <div class="theme-grid" id="themeGrid"></div>
 
     <footer class="home-footer">
       <div class="coins-pill">
@@ -43,14 +47,11 @@
     </footer>
   </div>
 
-  <!-- ══════════════════════════════════
-       JOGO
-  ══════════════════════════════════ -->
+  <!-- JOGO -->
   <div class="screen screen-game" id="screenGame">
 
     <div class="hud">
       <button class="hud-icon-btn" id="btnPause" aria-label="Pausar">⏸</button>
-
       <div class="hud-center">
         <div class="hud-timer" id="hudTimer">
           <span class="timer-val" id="timerVal">90</span>
@@ -61,30 +62,22 @@
           <span class="combo-label">combo</span>
         </div>
       </div>
-
       <div class="hud-coins">
         <span>🪙</span>
         <span id="gameCoins">0</span>
       </div>
     </div>
 
-    <div class="words-bar" id="wordsBar">
-      <!-- Chips de palavras injetados pelo hud.js -->
-    </div>
+    <div class="words-bar" id="wordsBar"></div>
 
     <div class="grid-wrap">
-      <div class="grid" id="grid" style="--gs:10">
-        <!-- Células injetadas pelo game.js -->
-      </div>
+      <div class="grid" id="grid" style="--gs:10"></div>
     </div>
 
     <div class="feedback-toast" id="feedbackToast"></div>
-
   </div>
 
-  <!-- ══════════════════════════════════
-       VITÓRIA
-  ══════════════════════════════════ -->
+  <!-- VITÓRIA -->
   <div class="screen screen-result screen-victory" id="screenVictory">
     <div class="result-card">
       <div class="result-emoji" id="victoryEmoji">🎉</div>
@@ -96,30 +89,26 @@
       </div>
       <div class="result-stats" id="resultStats"></div>
       <div class="result-actions">
-        <button class="btn btn--ghost" id="btnVHome">🏠 Início</button>
+        <button class="btn btn--ghost"   id="btnVHome">🏠 Início</button>
         <button class="btn btn--primary" id="btnNext">Próxima ▶</button>
       </div>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════
-       DERROTA
-  ══════════════════════════════════ -->
+  <!-- DERROTA -->
   <div class="screen screen-result screen-defeat" id="screenDefeat">
     <div class="result-card">
       <div class="result-emoji">💀</div>
       <h2 class="result-title">Fim de Jogo</h2>
       <p class="result-msg" id="defeatMsg">O tempo acabou!</p>
       <div class="result-actions">
-        <button class="btn btn--ghost" id="btnDHome">🏠 Início</button>
+        <button class="btn btn--ghost"   id="btnDHome">🏠 Início</button>
         <button class="btn btn--primary" id="btnRetry">🔁 Tentar de Novo</button>
       </div>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════
-       PAUSA (overlay)
-  ══════════════════════════════════ -->
+  <!-- PAUSA -->
   <div class="overlay-pause" id="overlayPause" aria-hidden="true">
     <div class="pause-card">
       <h2 class="pause-title">⏸ Pausado</h2>
@@ -137,6 +126,17 @@
   <script src="js/components/hud.js"></script>
   <script src="js/components/screens.js"></script>
   <script src="js/app.js"></script>
+
+  <!-- ✅ LINHA 3 — Service Worker (estava faltando) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(r => console.log('[PWA] Instalado:', r.scope))
+          .catch(e => console.warn('[PWA] Erro:', e));
+      });
+    }
+  </script>
 
 </body>
 </html>
