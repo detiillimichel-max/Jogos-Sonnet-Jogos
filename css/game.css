@@ -1,8 +1,8 @@
 /* ══════════════════════════════════════
    game.css — Grid, células, animações
+   (tema claro — letras bem visíveis)
 ══════════════════════════════════════ */
 
-/* ── Container ───────────────────────── */
 .grid-wrap {
   flex: 1;
   display: flex;
@@ -12,20 +12,16 @@
   overflow: hidden;
 }
 
-/* ── Grid ────────────────────────────── */
 .grid {
   display: grid;
   grid-template-columns: repeat(var(--gs), 1fr);
   gap: clamp(2px, 0.5vw, 4px);
-  width: min(
-    calc(100vw - var(--s3) * 2),
-    calc(100dvh - 180px)
-  );
+  width: min(calc(100vw - var(--s3) * 2), calc(100dvh - 180px));
   aspect-ratio: 1 / 1;
-  touch-action: none; /* evita scroll durante arrastar */
+  touch-action: none;
 }
 
-/* ── Célula ──────────────────────────── */
+/* ── Célula ── */
 .cell {
   aspect-ratio: 1;
   display: flex;
@@ -33,14 +29,15 @@
   justify-content: center;
 
   font-family: var(--font-mono);
-  font-size: clamp(9px, 2.8vw, 18px);
-  font-weight: 500;
-  color: var(--text-dim);
+  font-size: clamp(10px, 3vw, 19px);
+  font-weight: 700;
+  color: var(--text);           /* ✅ texto escuro, legível */
   letter-spacing: 0;
 
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: #ffffff;          /* ✅ fundo branco */
+  border: 1.5px solid #d0caf5;
   border-radius: clamp(3px, 1vw, 6px);
+  box-shadow: 0 1px 3px rgba(100,80,200,0.08);
 
   cursor: default;
   transition:
@@ -53,31 +50,31 @@
   overflow: hidden;
 }
 
-/* ── Selecionando ────────────────────── */
+/* ── Selecionando ── */
 .cell.is-selecting {
-  background: rgba(0, 229, 255, 0.15);
+  background: rgba(0, 184, 217, 0.18);
   border-color: var(--cyan);
-  color: var(--cyan);
-  box-shadow: 0 0 10px rgba(0, 229, 255, 0.35), inset 0 0 8px rgba(0, 229, 255, 0.1);
+  color: #005f75;
+  box-shadow: 0 0 10px rgba(0,184,217,0.4), inset 0 0 8px rgba(0,184,217,0.1);
   transform: scale(1.06);
   z-index: 2;
 }
 
-/* ── Primeira célula selecionada (destaque especial) */
 .cell.is-selecting-start {
-  background: rgba(0, 229, 255, 0.3);
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
+  background: rgba(0, 184, 217, 0.35);
+  border-color: var(--cyan);
+  box-shadow: 0 0 20px rgba(0,184,217,0.6);
 }
 
-/* ── Palavra encontrada (6 cores) ───── */
-.cell.found-0 { background: rgba(0,229,255,0.22);  border-color: var(--f0); color: var(--f0); box-shadow: 0 0 8px rgba(0,229,255,0.4); }
-.cell.found-1 { background: rgba(255,77,109,0.22); border-color: var(--f1); color: var(--f1); box-shadow: 0 0 8px rgba(255,77,109,0.4); }
-.cell.found-2 { background: rgba(57,245,135,0.22); border-color: var(--f2); color: var(--f2); box-shadow: 0 0 8px rgba(57,245,135,0.4); }
-.cell.found-3 { background: rgba(255,224,51,0.22); border-color: var(--f3); color: var(--f3); box-shadow: 0 0 8px rgba(255,224,51,0.4); }
-.cell.found-4 { background: rgba(180,77,255,0.22); border-color: var(--f4); color: var(--f4); box-shadow: 0 0 8px rgba(180,77,255,0.4); }
-.cell.found-5 { background: rgba(255,140,26,0.22); border-color: var(--f5); color: var(--f5); box-shadow: 0 0 8px rgba(255,140,26,0.4); }
+/* ── Palavra encontrada (6 cores, fundo sólido claro) ── */
+.cell.found-0 { background: rgba(0,184,217,0.2);   border-color: var(--f0); color: #005f75;  font-weight: 800; }
+.cell.found-1 { background: rgba(224,0,77,0.15);    border-color: var(--f1); color: #8b0024;  font-weight: 800; }
+.cell.found-2 { background: rgba(0,184,77,0.18);    border-color: var(--f2); color: #005a25;  font-weight: 800; }
+.cell.found-3 { background: rgba(204,136,0,0.18);   border-color: var(--f3); color: #7a4f00;  font-weight: 800; }
+.cell.found-4 { background: rgba(139,47,255,0.15);  border-color: var(--f4); color: #4a0099;  font-weight: 800; }
+.cell.found-5 { background: rgba(224,95,0,0.15);    border-color: var(--f5); color: #8b3300;  font-weight: 800; }
 
-/* ── Animação de entrada da célula ───── */
+/* ── Entrada ── */
 .cell {
   animation: cellIn 0.4s var(--ease) both;
   animation-delay: calc(var(--ci, 0) * 8ms);
@@ -87,24 +84,20 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
-/* ── Célula encontrada (pop!) ────────── */
-.cell.do-pop {
-  animation: cellPop 0.35s var(--ease);
-}
+/* ── Pop ── */
+.cell.do-pop { animation: cellPop 0.35s var(--ease); }
 @keyframes cellPop {
   0%   { transform: scale(1); }
   40%  { transform: scale(1.25); }
   100% { transform: scale(1); }
 }
 
-/* ── Shake de erro ───────────────────── */
-.grid.do-shake {
-  animation: gridShake 0.35s var(--ease);
-}
+/* ── Shake ── */
+.grid.do-shake { animation: gridShake 0.35s var(--ease); }
 @keyframes gridShake {
   0%,100% { transform: translateX(0); }
   20%     { transform: translateX(-8px); }
   40%     { transform: translateX(8px); }
   60%     { transform: translateX(-5px); }
   80%     { transform: translateX(5px); }
-    }
+}
