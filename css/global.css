@@ -1,47 +1,47 @@
 /* ══════════════════════════════════════
-   global.css — Design tokens + reset
+   global.css — Tema CLARO (Light Mode)
 ══════════════════════════════════════ */
 :root {
-  /* Fundo */
-  --bg:        #060514;
-  --bg-card:   #0e0b25;
-  --bg-elev:   #19163a;
-  --border:    #2a256b;
+  /* ── Fundo ── */
+  --bg:        #f4f2ff;
+  --bg-card:   #ffffff;
+  --bg-elev:   #ece9ff;
+  --border:    #d0caf5;
 
-  /* Neon palette */
-  --cyan:    #00e5ff;
-  --purple:  #b44dff;
-  --pink:    #ff4da6;
-  --yellow:  #ffe033;
-  --green:   #39f587;
-  --orange:  #ff8c1a;
+  /* ── Neon palette (mantém vibrante) ── */
+  --cyan:    #00b8d9;
+  --purple:  #8b2fff;
+  --pink:    #e0006e;
+  --yellow:  #e6a800;
+  --green:   #00b84d;
+  --orange:  #e05f00;
 
-  /* Cores de palavra encontrada */
-  --f0: #00e5ff;
-  --f1: #ff4d6d;
-  --f2: #39f587;
-  --f3: #ffe033;
-  --f4: #b44dff;
-  --f5: #ff8c1a;
+  /* ── Cores de palavra encontrada ── */
+  --f0: #00b8d9;
+  --f1: #e0004d;
+  --f2: #00b84d;
+  --f3: #cc8800;
+  --f4: #8b2fff;
+  --f5: #e05f00;
 
-  /* Texto */
-  --text:      #ddd8ff;
-  --text-dim:  #6461a8;
-  --text-off:  #302d68;
+  /* ── Texto ── */
+  --text:      #1a1540;
+  --text-dim:  #6b64a0;
+  --text-off:  #b0abdc;
 
-  /* Tipografia */
+  /* ── Tipografia ── */
   --font-game: 'Exo 2', sans-serif;
   --font-ui:   'DM Sans', sans-serif;
   --font-mono: 'DM Mono', monospace;
 
-  /* Espaço */
+  /* ── Espaço ── */
   --s1: 4px;  --s2: 8px;  --s3: 16px;
   --s4: 24px; --s5: 40px;
 
-  /* Raio */
+  /* ── Raio ── */
   --r1: 6px; --r2: 12px; --r3: 20px; --rf: 9999px;
 
-  /* Animação */
+  /* ── Animação ── */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
