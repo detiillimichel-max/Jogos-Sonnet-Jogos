@@ -1,97 +1,86 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ELO PALAVRAS • Caça-Palavras</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@500;700&family=DM+Sans:wght@400;500;700&family=Exo+2:wght@700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/global.css" />
-<link rel="stylesheet" href="css/ui.css" />
-<link rel="stylesheet" href="css/game.css" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>ELO Caça Palavras</title>
+<link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
-<section id="screenHome" class="screen is-active">
-  <div class="home-glow home-glow--1"></div>
-  <div class="home-glow home-glow--2"></div>
-  <header class="home-header">
-    <h1 class="logo"><span class="logo-elo">ELO</span><span class="logo-palavras">PALAVRAS</span></h1>
-    <p class="home-tagline">CAÇA-PALAVRAS NEON</p>
-  </header>
-  <div id="themeGrid" class="theme-grid"></div>
-  <footer class="home-footer">
-    <div class="coins-pill">🪙 <span id="homeCoins">0</span></div>
-  </footer>
-</section>
-
-<section id="screenGame" class="screen">
-  <div class="hud">
-    <button id="btnPause" class="hud-icon-btn">⏸</button>
-    <div class="hud-center">
-      <div class="hud-timer">
-        <span id="timerVal" class="timer-val">90</span>
-        <span class="timer-label">s</span>
-      </div>
-      <div class="hud-combo">
-        <span id="comboVal" class="combo-val">×1</span>
-        <span class="combo-label">COMBO</span>
+  <!-- HOME -->
+  <section id="screenHome" class="screen active">
+    <div class="home-header">
+      <h1>ELO</h1>
+      <div class="home-actions">
+        <div class="coins">🪙 <span id="homeCoins">0</span></div>
+        <button id="btnShop" class="btn-icon" aria-label="Loja">🛒</button>
       </div>
     </div>
-    <div class="hud-coins">🪙 <span id="gameCoins">0</span></div>
-  </div>
-  <div id="wordsBar" class="words-bar"></div>
-  <div class="grid-wrap">
+    <div id="themeGrid" class="theme-grid"></div>
+  </section>
+
+  <!-- GAME -->
+  <section id="screenGame" class="screen">
+    <div class="game-header">
+      <button id="btnPause" class="btn-icon">⏸</button>
+      <div class="timer"><span id="timer">90</span>s</div>
+      <div class="combo">×<span id="combo">1</span></div>
+      <div class="coins">🪙 <span id="gameCoins">0</span></div>
+    </div>
+    <div id="wordChips" class="word-chips"></div>
     <div id="grid" class="grid"></div>
-  </div>
-  <div id="feedbackToast" class="feedback-toast"></div>
-</section>
+    <div id="toast" class="toast"></div>
+  </section>
 
-<section id="screenVictory" class="screen screen-result">
-  <div class="result-card">
-    <div class="result-emoji">🎉</div>
-    <h2 class="result-title">Vitória!</h2>
-    <p class="result-msg">Nível completo</p>
-    <div class="stars-row">
-      <span id="s1" class="star">⭐</span>
-      <span id="s2" class="star">⭐</span>
-      <span id="s3" class="star">⭐</span>
+  <!-- PAUSE -->
+  <section id="screenPause" class="screen modal">
+    <div class="modal-card">
+      <h2>Pausado</h2>
+      <button id="btnResume" class="btn-primary">Continuar</button>
+      <button id="btnQuit" class="btn-ghost">Sair</button>
     </div>
-    <div id="resultStats" class="result-stats"></div>
-    <div class="result-actions">
-      <button id="btnVHome" class="btn btn--ghost">Home</button>
-      <button id="btnNext" class="btn btn--primary">Próximo</button>
+  </section>
+
+  <!-- VICTORY -->
+  <section id="screenVictory" class="screen modal">
+    <div class="modal-card">
+      <h2>Vitória!</h2>
+      <p id="vStats"></p>
+      <button id="btnNext" class="btn-primary">Próxima fase</button>
+      <button id="btnVHome" class="btn-ghost">Home</button>
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="screenDefeat" class="screen screen-result">
-  <div class="result-card">
-    <div class="result-emoji">💥</div>
-    <h2 class="result-title">Fim de jogo</h2>
-    <p id="defeatMsg" class="result-msg">Tente novamente</p>
-    <div class="result-actions">
-      <button id="btnDHome" class="btn btn--ghost">Home</button>
-      <button id="btnRetry" class="btn btn--primary">Tentar de novo</button>
+  <!-- DEFEAT -->
+  <section id="screenDefeat" class="screen modal">
+    <div class="modal-card">
+      <h2>Fim de jogo</h2>
+      <p id="dReason"></p>
+      <button id="btnRetry" class="btn-primary">Tentar de novo</button>
+      <button id="btnDHome" class="btn-ghost">Home</button>
     </div>
-  </div>
-</section>
+  </section>
 
-<div id="overlayPause" class="overlay-pause" aria-hidden="true">
-  <div class="pause-card">
-    <h3 class="pause-title">Pausado</h3>
-    <button id="btnResume" class="btn btn--primary">Continuar</button>
-    <button id="btnQuit" class="btn btn--ghost">Sair</button>
-  </div>
-</div>
+  <!-- SHOP -->
+  <section id="screenShop" class="screen">
+    <div class="shop-header">
+      <h2>Loja</h2>
+      <div class="coins">🪙 <span id="shopCoins">0</span></div>
+      <button id="btnShopClose" class="btn-icon">✕</button>
+    </div>
+    <div id="shopGrid" class="shop-grid"></div>
+  </section>
 
-<script src="js/data/words.js"></script>
-<script src="js/services/storage.js"></script>
-<script src="js/engine/grid.js"></script>
-<script src="js/engine/selection.js"></script>
-<script src="js/engine/game.js"></script>
-<script src="js/components/hud.js"></script>
-<script src="js/components/screens.js"></script>
-<script src="js/app.js"></script>
+  <!-- SCRIPTS -->
+  <script src="js/data/words.js"></script>
+  <script src="js/services/storage.js"></script>
+  <script src="js/services/audio.js"></script>
+  <script src="js/engine/grid.js"></script>
+  <script src="js/engine/selection.js"></script>
+  <script src="js/engine/game.js"></script>
+  <script src="js/components/hud.js"></script>
+  <script src="js/components/screens.js"></script>
+  <script src="js/components/shop.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
