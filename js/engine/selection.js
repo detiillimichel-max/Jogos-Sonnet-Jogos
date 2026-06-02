@@ -1,12 +1,3 @@
-/* ════════════════════════════════════════
-   selection.js - Arrastar e selecionar
-   VERSAO CORRIGIDA 2026-06-02
-   - Usa Pointer Events com capture
-   - Remove listeners antigos ao reiniciar
-   - Garante linha reta em 8 direcoes
-   - Nao depende de elementFromPoint
-════════════════════════════════════════ */
-
 const SelectionEngine = (() => {
   let _gridEl = null;
   let _gridSize = 10;
@@ -14,27 +5,20 @@ const SelectionEngine = (() => {
   let _activePointerId = null;
   let _startCell = null;
   let _curCells = [];
-
-  // guarda referencias para remover depois
   let _handlers = {};
 
   function init(gridEl, gridSize, onSelect) {
-    // limpa listeners antigos
     _cleanup();
-
     _gridEl = gridEl;
     _gridSize = gridSize;
     _onSelect = onSelect;
     _activePointerId = null;
     _startCell = null;
     _curCells = [];
-
     _handlers.down = _onPointerDown.bind(this);
     _handlers.move = _onPointerMove.bind(this);
     _handlers.up = _onPointerUp.bind(this);
-
     gridEl.addEventListener('pointerdown', _handlers.down);
-    // move/up no window para nao perder ao sair da grade
     window.addEventListener('pointermove', _handlers.move);
     window.addEventListener('pointerup', _handlers.up);
     window.addEventListener('pointercancel', _handlers.up);
@@ -52,13 +36,12 @@ const SelectionEngine = (() => {
 
   function _cellFromTarget(target) {
     const cell = target?.closest?.('[data-r]');
-    if (!cell || !_gridEl.contains(cell)) return null;
+    if (!cell ||!_gridEl.contains(cell)) return null;
     return { r: +cell.dataset.r, c: +cell.dataset.c, el: cell };
   }
 
   function _onPointerDown(e) {
-    // so botao esquerdo / toque
-    if (e.button !== 0) return;
+    if (e.button!== 0) return;
     const cell = _cellFromTarget(e.target);
     if (!cell) return;
     e.preventDefault();
@@ -70,10 +53,9 @@ const SelectionEngine = (() => {
   }
 
   function _onPointerMove(e) {
-    if (_activePointerId !== e.pointerId || !_startCell) return;
+    if (_activePointerId!== e.pointerId ||!_startCell) return;
     const cell = _cellFromTarget(e.target);
     if (!cell) return;
-    // evita recalcular se for mesma celula
     const last = _curCells[_curCells.length - 1];
     if (last.r === cell.r && last.c === cell.c) return;
     _curCells = _lineFromTo(_startCell, cell);
@@ -81,12 +63,12 @@ const SelectionEngine = (() => {
   }
 
   function _onPointerUp(e) {
-    if (_activePointerId !== e.pointerId || !_startCell) return;
+    if (_activePointerId!== e.pointerId ||!_startCell) return;
     e.preventDefault();
     try { _gridEl.releasePointerCapture(e.pointerId); } catch {}
     const word = _curCells.map(({r,c}) => {
       const el = _gridEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
-      return el ? el.textContent.trim() : '';
+      return el? el.textContent.trim() : '';
     }).join('');
     _onSelect?.([..._curCells], word);
     _clearPaint();
@@ -99,16 +81,11 @@ const SelectionEngine = (() => {
     const dr = end.r - start.r;
     const dc = end.c - start.c;
     if (dr === 0 && dc === 0) return [start];
-    // snap para 8 direcoes
-    const angle = Math.atan2(dr, dc);
-    const dirs = [
-      [0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]
-    ];
+    const dirs = [[0,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]];
     let best = dirs[0], bestDot = -Infinity;
     const len = Math.hypot(dr, dc) || 1;
     const ndx = dc / len, ndy = dr / len;
     for (const [dR,dC] of dirs) {
-      // dirs stored as [dr, dc] ? we have [0,1] = dr0 dc1
       const dot = ndy * dR + ndx * dC;
       if (dot > bestDot) { bestDot = dot; best = [dR,dC]; }
     }
@@ -135,8 +112,8 @@ const SelectionEngine = (() => {
   }
 
   function _clearPaint() {
-    _gridEl.querySelectorAll('.is-selecting, .is-selecting-start')
-      .forEach(el => el.classList.remove('is-selecting','is-selecting-start'));
+    _gridEl.querySelectorAll('.is-selecting,.is-selecting-start')
+     .forEach(el => el.classList.remove('is-selecting','is-selecting-start'));
   }
 
   function markFound(cells, colorIdx) {
@@ -145,7 +122,6 @@ const SelectionEngine = (() => {
       if (!el) return;
       el.classList.remove('is-selecting','is-selecting-start');
       el.classList.add(`found-${colorIdx}`,'do-pop');
-      // remove pop class apos animacao para poder repetir
       el.addEventListener('animationend', () => el.classList.remove('do-pop'), {once:true});
     });
   }
