@@ -1,106 +1,132 @@
 /* ════════════════════════════════════════
-   selection.js — Arrastar e selecionar
-   Versão Estabilizada
+   selection.js - Arrastar e selecionar
+   VERSAO CORRIGIDA 2026-06-02
+   - Usa Pointer Events com capture
+   - Remove listeners antigos ao reiniciar
+   - Garante linha reta em 8 direcoes
+   - Nao depende de elementFromPoint
 ════════════════════════════════════════ */
 
 const SelectionEngine = (() => {
-
-  let _gridEl   = null;
+  let _gridEl = null;
   let _gridSize = 10;
   let _onSelect = null;
-
+  let _activePointerId = null;
   let _startCell = null;
-  let _curCells  = [];
-  let _lastValidCell = null;
+  let _curCells = [];
+
+  // guarda referencias para remover depois
+  let _handlers = {};
 
   function init(gridEl, gridSize, onSelect) {
-    _gridEl   = gridEl;
+    // limpa listeners antigos
+    _cleanup();
+
+    _gridEl = gridEl;
     _gridSize = gridSize;
     _onSelect = onSelect;
+    _activePointerId = null;
+    _startCell = null;
+    _curCells = [];
 
-    gridEl.addEventListener('mousedown',  _start);
-    gridEl.addEventListener('mousemove',  _move);
-    window.addEventListener('mouseup',    _end);
-    gridEl.addEventListener('touchstart', _start, { passive: false });
-    gridEl.addEventListener('touchmove',  _move,  { passive: false });
-    window.addEventListener('touchend',   _end);
+    _handlers.down = _onPointerDown.bind(this);
+    _handlers.move = _onPointerMove.bind(this);
+    _handlers.up = _onPointerUp.bind(this);
+
+    gridEl.addEventListener('pointerdown', _handlers.down);
+    // move/up no window para nao perder ao sair da grade
+    window.addEventListener('pointermove', _handlers.move);
+    window.addEventListener('pointerup', _handlers.up);
+    window.addEventListener('pointercancel', _handlers.up);
   }
 
-  function _start(e) {
-    e.preventDefault();
-    const cell = _cellFromEvent(e);
+  function _cleanup() {
+    if (_gridEl && _handlers.down) {
+      _gridEl.removeEventListener('pointerdown', _handlers.down);
+      window.removeEventListener('pointermove', _handlers.move);
+      window.removeEventListener('pointerup', _handlers.up);
+      window.removeEventListener('pointercancel', _handlers.up);
+    }
+    _handlers = {};
+  }
+
+  function _cellFromTarget(target) {
+    const cell = target?.closest?.('[data-r]');
+    if (!cell || !_gridEl.contains(cell)) return null;
+    return { r: +cell.dataset.r, c: +cell.dataset.c, el: cell };
+  }
+
+  function _onPointerDown(e) {
+    // so botao esquerdo / toque
+    if (e.button !== 0) return;
+    const cell = _cellFromTarget(e.target);
     if (!cell) return;
+    e.preventDefault();
+    _activePointerId = e.pointerId;
+    _gridEl.setPointerCapture(e.pointerId);
     _startCell = cell;
-    _curCells  = [cell];
+    _curCells = [cell];
     _paint();
   }
 
-  function _move(e) {
-    e.preventDefault();
-    if (!_startCell) return;
-    const cell = _cellFromEvent(e);
+  function _onPointerMove(e) {
+    if (_activePointerId !== e.pointerId || !_startCell) return;
+    const cell = _cellFromTarget(e.target);
     if (!cell) return;
+    // evita recalcular se for mesma celula
+    const last = _curCells[_curCells.length - 1];
+    if (last.r === cell.r && last.c === cell.c) return;
     _curCells = _lineFromTo(_startCell, cell);
     _paint();
   }
 
-  function _end(e) {
-    if (!_startCell) return;
-    const word = _curCells.map(({ r, c }) => {
+  function _onPointerUp(e) {
+    if (_activePointerId !== e.pointerId || !_startCell) return;
+    e.preventDefault();
+    try { _gridEl.releasePointerCapture(e.pointerId); } catch {}
+    const word = _curCells.map(({r,c}) => {
       const el = _gridEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
       return el ? el.textContent.trim() : '';
     }).join('');
-
-    _onSelect?.([..._curCells], word.trim());
-
-    _gridEl.querySelectorAll('.is-selecting, .is-selecting-start')
-      .forEach(el => el.classList.remove('is-selecting', 'is-selecting-start'));
-    _startCell = null; _curCells = []; _lastValidCell = null;
-  }
-
-  function _cellFromEvent(e) {
-    const pt  = e.touches?.[0] ?? e;
-    const el  = document.elementFromPoint(pt.clientX, pt.clientY);
-    const cell = el?.closest('[data-r]');
-    if (cell) {
-        _lastValidCell = { r: +cell.dataset.r, c: +cell.dataset.c };
-        return _lastValidCell;
-    }
-    return _lastValidCell;
+    _onSelect?.([..._curCells], word);
+    _clearPaint();
+    _activePointerId = null;
+    _startCell = null;
+    _curCells = [];
   }
 
   function _lineFromTo(start, end) {
     const dr = end.r - start.r;
     const dc = end.c - start.c;
     if (dr === 0 && dc === 0) return [start];
+    // snap para 8 direcoes
     const angle = Math.atan2(dr, dc);
-    const PI = Math.PI;
-    const SNAPS = [
-      { dir: [0, 1], a: 0 }, { dir: [1, 1], a: PI/4 }, { dir: [1, 0], a: PI/2 },
-      { dir: [1, -1], a: 3*PI/4 }, { dir: [0, -1], a: PI }, { dir: [-1, -1], a: -3*PI/4 },
-      { dir: [-1, 0], a: -PI/2 }, { dir: [-1, 1], a: -PI/4 }
+    const dirs = [
+      [0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]
     ];
-    let best = SNAPS[0], minDiff = Infinity;
-    for (const s of SNAPS) {
-      let diff = Math.abs(angle - s.a);
-      if (diff > PI) diff = 2 * PI - diff;
-      if (diff < minDiff) { minDiff = diff; best = s; }
+    let best = dirs[0], bestDot = -Infinity;
+    const len = Math.hypot(dr, dc) || 1;
+    const ndx = dc / len, ndy = dr / len;
+    for (const [dR,dC] of dirs) {
+      // dirs stored as [dr, dc] ? we have [0,1] = dr0 dc1
+      const dot = ndy * dR + ndx * dC;
+      if (dot > bestDot) { bestDot = dot; best = [dR,dC]; }
     }
-    const [sdr, sdc] = best.dir;
+    const [sdr, sdc] = best;
     const steps = Math.max(Math.abs(dr), Math.abs(dc));
     const cells = [];
     for (let i = 0; i <= steps; i++) {
       const r = start.r + sdr * i;
       const c = start.c + sdc * i;
-      if (r >= 0 && r < _gridSize && c >= 0 && c < _gridSize) cells.push({ r, c });
+      if (r < 0 || r >= _gridSize || c < 0 || c >= _gridSize) break;
+      cells.push({ r, c });
     }
     return cells;
   }
 
   function _paint() {
-    _gridEl.querySelectorAll('.is-selecting, .is-selecting-start')
-      .forEach(el => el.classList.remove('is-selecting', 'is-selecting-start'));
-    _curCells.forEach(({ r, c }, i) => {
+    _clearPaint();
+    _curCells.forEach(({r,c}, i) => {
       const el = _gridEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
       if (!el) return;
       el.classList.add('is-selecting');
@@ -108,12 +134,19 @@ const SelectionEngine = (() => {
     });
   }
 
+  function _clearPaint() {
+    _gridEl.querySelectorAll('.is-selecting, .is-selecting-start')
+      .forEach(el => el.classList.remove('is-selecting','is-selecting-start'));
+  }
+
   function markFound(cells, colorIdx) {
-    cells.forEach(({ r, c }) => {
+    cells.forEach(({r,c}) => {
       const el = _gridEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
       if (!el) return;
-      el.classList.remove('is-selecting', 'is-selecting-start');
-      el.classList.add(`found-${colorIdx}`, 'do-pop');
+      el.classList.remove('is-selecting','is-selecting-start');
+      el.classList.add(`found-${colorIdx}`,'do-pop');
+      // remove pop class apos animacao para poder repetir
+      el.addEventListener('animationend', () => el.classList.remove('do-pop'), {once:true});
     });
   }
 
