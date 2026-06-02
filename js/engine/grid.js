@@ -1,51 +1,25 @@
 /* ════════════════════════════════════════
-   grid.js — Geração do grid e palavras
+   grid.js — Gerador de Grid com palavras
+   Garante a inserção correta antes do preenchimento
 ════════════════════════════════════════ */
 
 const GridEngine = (() => {
 
-  /* 8 direções: [deltaRow, deltaCol] */
-  const DIRS = [
-    [0,  1], [0, -1],  /* → ←  horizontal */
-    [1,  0], [-1, 0],  /* ↓ ↑  vertical   */
-    [1,  1], [1, -1],  /* ↘ ↙  diagonal   */
-    [-1, 1], [-1,-1],  /* ↗ ↖  diagonal   */
-  ];
-
-  /* Letras ponderadas (vogais e comuns em PT-BR aparecem mais) */
-  const FILL = 'AAAEEEIIOOUURRSSLMNCBDFTGPVHJKQWXYZ';
-
-  /**
-   * Gera o grid com palavras posicionadas.
-   * @param {string[]} words - palavras em MAIÚSCULO sem acento
-   * @param {number} size    - tamanho N do grid NxN
-   * @returns {{ grid: string[][], placed: PlacedWord[] }}
-   */
   function generate(words, size) {
-    /* Inicializa grid vazio */
-    const grid = Array.from({ length: size }, () => Array(size).fill(''));
-    const placed = [];
+    let grid = Array.from({ length: size }, () => Array(size).fill(''));
+    let placed = [];
 
-    /* Ordena por tamanho (maiores primeiro, mais fácil posicionar) */
-    const sorted = [...words].sort((a, b) => b.length - a.length);
-
-    sorted.forEach((word, idx) => {
-      const result = _placeWord(grid, word.toUpperCase(), size);
-      if (result) {
-        placed.push({
-          word:  word.toUpperCase(),
-          cells: result.cells,
-          found: false,
-          color: idx % 6,
-        });
-      }
+    // Tenta colocar cada palavra
+    words.forEach((word, idx) => {
+      let placedWord = _tryPlaceWord(grid, word, size, idx);
+      if (placedWord) placed.push(placedWord);
     });
 
-    /* Preenche células vazias */
+    // Preenche espaços vazios com letras aleatórias
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
-        if (!grid[r][c]) {
-          grid[r][c] = FILL[Math.floor(Math.random() * FILL.length)];
+        if (grid[r][c] === '') {
+          grid[r][c] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
         }
       }
     }
@@ -53,60 +27,41 @@ const GridEngine = (() => {
     return { grid, placed };
   }
 
-  /* ── Posiciona uma palavra ──────────── */
-  function _placeWord(grid, word, size) {
-    const dirs = _shuffle([...DIRS]);
+  function _tryPlaceWord(grid, word, size, colorIdx) {
+    const dirs = [
+      [0, 1], [1, 0], [1, 1], [1, -1],
+      [0, -1], [-1, 0], [-1, -1], [-1, 1]
+    ];
+    
+    // Tenta 100 vezes por palavra para achar uma posição válida
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const dir = dirs[Math.floor(Math.random() * dirs.length)];
+      const r = Math.floor(Math.random() * size);
+      const c = Math.floor(Math.random() * size);
 
-    for (const [dr, dc] of dirs) {
-      const positions = _shuffle(_validStarts(word.length, dr, dc, size));
-
-      for (const [sr, sc] of positions) {
-        const cells = [];
-        let ok = true;
-
+      if (_canPlace(grid, word, r, c, dir, size)) {
+        let cells = [];
         for (let i = 0; i < word.length; i++) {
-          const r = sr + dr * i;
-          const c = sc + dc * i;
-          const existing = grid[r][c];
-
-          if (existing !== '' && existing !== word[i]) { ok = false; break; }
-          cells.push([r, c]);
+          const nr = r + dir[0] * i;
+          const nc = c + dir[1] * i;
+          grid[nr][nc] = word[i];
+          cells.push([nr, nc]);
         }
-
-        if (ok) {
-          cells.forEach(([r, c], i) => { grid[r][c] = word[i]; });
-          return { cells };
-        }
+        return { word, cells, color: colorIdx % 5, found: false };
       }
     }
-
-    return null; /* Não conseguiu posicionar */
+    return null; // Não conseguiu colocar a palavra
   }
 
-  /* ── Gera posições iniciais válidas ─── */
-  function _validStarts(len, dr, dc, size) {
-    const result = [];
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
-        const er = r + dr * (len - 1);
-        const ec = c + dc * (len - 1);
-        if (er >= 0 && er < size && ec >= 0 && ec < size) {
-          result.push([r, c]);
-        }
-      }
+  function _canPlace(grid, word, r, c, dir, size) {
+    for (let i = 0; i < word.length; i++) {
+      const nr = r + dir[0] * i;
+      const nc = c + dir[1] * i;
+      if (nr < 0 || nr >= size || nc < 0 || nc >= size) return false;
+      if (grid[nr][nc] !== '' && grid[nr][nc] !== word[i]) return false;
     }
-    return result;
-  }
-
-  /* ── Fisher-Yates shuffle ──────────── */
-  function _shuffle(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
+    return true;
   }
 
   return { generate };
-
 })();
