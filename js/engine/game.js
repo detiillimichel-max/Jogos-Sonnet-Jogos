@@ -1,34 +1,11 @@
-/* ════════════════════════════════════════
-   game.js - Versao completa e funcional
-   CORRIGIDO 2026-06-02: normalizacao de acentos e validacao robusta
-════════════════════════════════════════ */
-
 const GameEngine = (() => {
-
   let S = _initialState();
 
   function _initialState() {
-    return {
-      phase:      'idle',
-      themeId:    null,
-      levelIndex: null,
-      levelData:  null,
-      grid:       [],
-      words:      [],
-      timer:      0,
-      _timerRef:  null,
-      combo:      1,
-      _comboRef:  null,
-      errors:     0,
-      coinsEarned:0,
-    };
+    return { phase:'idle', themeId:null, levelIndex:null, levelData:null, grid:[], words:[], timer:0, _timerRef:null, combo:1, _comboRef:null, errors:0, coinsEarned:0 };
   }
 
-  const _cb = {
-    onTick: null, onCombo: null, onFound: null, onError: null,
-    onVictory: null, onDefeat: null, onCoins: null,
-  };
-
+  const _cb = { onTick:null, onCombo:null, onFound:null, onError:null, onVictory:null, onDefeat:null, onCoins:null };
   function on(event, fn) { _cb[`on${event}`] = fn; }
 
   function start(themeId, levelIndex) {
@@ -38,8 +15,7 @@ const GameEngine = (() => {
     if (!theme) return;
     S.themeId = themeId; S.levelIndex = levelIndex;
     S.levelData = theme.levels[levelIndex];
-    S.phase = 'playing'; S.timer = S.levelData.time;
-    S.coinsEarned = 0;
+    S.phase = 'playing'; S.timer = S.levelData.time; S.coinsEarned = 0;
     const { grid, placed } = GridEngine.generate(S.levelData.words, S.levelData.size);
     S.grid = grid; S.words = placed;
     _renderGrid(grid, S.levelData.size);
@@ -52,7 +28,7 @@ const GameEngine = (() => {
   function _startTimer() {
     _cb.onTick?.(S.timer);
     S._timerRef = setInterval(() => {
-      if (S.phase !== 'playing') return;
+      if (S.phase!== 'playing') return;
       S.timer--;
       _cb.onTick?.(S.timer);
       if (S.timer <= 0) _triggerDefeat('O tempo acabou!');
@@ -60,45 +36,30 @@ const GameEngine = (() => {
   }
 
   function _handleSelection(cells, word) {
-    if (S.phase !== 'playing') return;
-
+    if (S.phase!== 'playing') return;
     const normalize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
     const cleaned = normalize(word);
     const reversed = normalize([...cleaned].reverse().join(''));
-
     if (cleaned.length < 2) return;
-
-    const found = S.words.find(w =>
-      !w.found && (normalize(w.word) === cleaned || normalize(w.word) === reversed)
-    );
-
-    if (found) {
-      _wordFound(found);
-    } else {
-      _wordMissed();
-    }
+    const found = S.words.find(w =>!w.found && (normalize(w.word) === cleaned || normalize(w.word) === reversed));
+    if (found) { _wordFound(found); } else { _wordMissed(); }
   }
 
   function _wordFound(wordData) {
     wordData.found = true;
     S.combo = Math.min(S.combo + 1, 8);
     clearTimeout(S._comboRef);
-    S._comboRef = setTimeout(() => {
-      S.combo = 1;
-      _cb.onCombo?.(S.combo);
-    }, 6000);
+    S._comboRef = setTimeout(() => { S.combo = 1; _cb.onCombo?.(S.combo); }, 6000);
     const base = 10 + wordData.word.length * 2;
     const earned = Math.round(base * S.combo);
     S.coinsEarned += earned;
     GameStorage.addCoins(earned);
-    const cellObjs = wordData.cells.map(([r, c]) => ({ r, c }));
+    const cellObjs = wordData.cells.map(([r,c]) => ({r,c}));
     SelectionEngine.markFound(cellObjs, wordData.color);
     _cb.onCombo?.(S.combo);
     _cb.onFound?.(wordData, earned);
     _cb.onCoins?.(GameStorage.getCoins());
-    if (S.words.every(w => w.found)) {
-      setTimeout(() => _triggerVictory(), 400);
-    }
+    if (S.words.every(w => w.found)) { setTimeout(() => _triggerVictory(), 400); }
   }
 
   function _wordMissed() {
@@ -106,39 +67,23 @@ const GameEngine = (() => {
     clearTimeout(S._comboRef);
     _cb.onCombo?.(S.combo);
     _cb.onError?.();
-    if (S.errors >= S.levelData.maxErrors) {
-      setTimeout(() => _triggerDefeat(`Muitos erros (${S.errors})!`), 400);
-    }
+    if (S.errors >= S.levelData.maxErrors) { setTimeout(() => _triggerDefeat(`Muitos erros (${S.errors})!`), 400); }
   }
 
   function _triggerVictory() {
     S.phase = 'victory'; _clearTimers();
-    const stars = S.errors === 0 ? 3 : S.errors <= 2 ? 2 : 1;
+    const stars = S.errors === 0? 3 : S.errors <= 2? 2 : 1;
     GameStorage.saveProgress(S.themeId, S.levelIndex, stars);
     const timeBonus = Math.round((S.timer / S.levelData.time) * 20);
     if (timeBonus > 0) GameStorage.addCoins(timeBonus);
-    _cb.onVictory?.({
-      stars, errors: S.errors, coinsEarned: S.coinsEarned + timeBonus, timeLeft: S.timer,
-    });
+    _cb.onVictory?.({ stars, errors: S.errors, coinsEarned: S.coinsEarned + timeBonus, timeLeft: S.timer });
   }
 
-  function _triggerDefeat(reason) {
-    S.phase = 'defeat'; _clearTimers();
-    _cb.onDefeat?.(reason);
-  }
+  function _triggerDefeat(reason) { S.phase = 'defeat'; _clearTimers(); _cb.onDefeat?.(reason); }
 
-  function pause() {
-    if (S.phase !== 'playing') return;
-    S.phase = 'paused'; _clearTimers();
-  }
-
-  function resume() {
-    if (S.phase !== 'paused') return;
-    S.phase = 'playing'; _startTimer();
-  }
-
+  function pause() { if (S.phase!== 'playing') return; S.phase = 'paused'; _clearTimers(); }
+  function resume() { if (S.phase!== 'paused') return; S.phase = 'playing'; _startTimer(); }
   function restart() { return start(S.themeId, S.levelIndex); }
-
   function nextLevel() {
     const theme = WordData.themes.find(t => t.id === S.themeId);
     const nextIdx = S.levelIndex + 1;
@@ -148,8 +93,7 @@ const GameEngine = (() => {
 
   function _renderGrid(grid, size) {
     const el = document.getElementById('grid');
-    el.innerHTML = ''; el.style.setProperty('--gs', size);
-    el.classList.remove('do-shake');
+    el.innerHTML = ''; el.style.setProperty('--gs', size); el.classList.remove('do-shake');
     grid.forEach((row, r) => {
       row.forEach((letter, c) => {
         const cell = document.createElement('div');
@@ -165,11 +109,7 @@ const GameEngine = (() => {
   function getState() { return S; }
   function getThemeId() { return S.themeId; }
   function getLevelIndex() { return S.levelIndex; }
-
-  function _clearTimers() {
-    clearInterval(S._timerRef);
-    clearTimeout(S._comboRef);
-  }
+  function _clearTimers() { clearInterval(S._timerRef); clearTimeout(S._comboRef); }
 
   return { start, restart, nextLevel, pause, resume, on, getWords, getState, getThemeId, getLevelIndex };
 })();
