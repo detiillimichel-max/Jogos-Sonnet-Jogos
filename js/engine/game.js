@@ -1,5 +1,6 @@
 /* ════════════════════════════════════════
-   game.js — Versão completa e funcional
+   game.js - Versao completa e funcional
+   CORRIGIDO 2026-06-02: normalizacao de acentos e validacao robusta
 ════════════════════════════════════════ */
 
 const GameEngine = (() => {
@@ -61,17 +62,19 @@ const GameEngine = (() => {
   function _handleSelection(cells, word) {
     if (S.phase !== 'playing') return;
 
-    // Normalização correta para garantir a validação
-    const cleanedInput = word.trim().toUpperCase();
-    const reversed = cleanedInput.split('').reverse().join('');
+    const normalize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+    const cleaned = normalize(word);
+    const reversed = normalize([...cleaned].reverse().join(''));
+
+    if (cleaned.length < 2) return;
 
     const found = S.words.find(w =>
-      !w.found && (w.word === cleanedInput || w.word === reversed)
+      !w.found && (normalize(w.word) === cleaned || normalize(w.word) === reversed)
     );
 
     if (found) {
       _wordFound(found);
-    } else if (cleanedInput.length > 1) {
+    } else {
       _wordMissed();
     }
   }
