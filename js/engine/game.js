@@ -169,4 +169,52 @@ const GameEngine = (() => {
 
   return { start, restart, nextLevel, pause, resume, on, getWords, getState, getThemeId, getLevelIndex };
 })();
+/* ════════════════════════════════════════
+   game.js — Engine de validação corrigida
+════════════════════════════════════════ */
+
+const GameEngine = (() => {
+  let S = {};
+
+  const _cb = { onTick: null, onCombo: null, onFound: null, onError: null, onDefeat: null, onVictory: null, onCoins: null };
+  function on(event, fn) { _cb[`on${event}`] = fn; }
+
+  function _handleSelection(cells, word) {
+    if (S.phase !== 'playing') return;
+
+    // Normalização agressiva para garantir o match
+    const cleanWord = word.toUpperCase().trim();
+    const reversed = cleanWord.split('').reverse().join('');
+
+    const found = S.words.find(w => 
+      !w.found && (w.word.toUpperCase() === cleanWord || w.word.toUpperCase() === reversed)
+    );
+
+    if (found) {
+      _wordFound(found);
+    } else if (cleanWord.length > 1) {
+      _wordMissed();
+    }
+  }
+
+  function _wordFound(wordData) {
+    wordData.found = true;
+    S.combo = Math.min(S.combo + 1, 8);
+    const earned = Math.round((10 + wordData.word.length * 2) * S.combo);
+    SelectionEngine.markFound(wordData.cells.map(([r, c]) => ({ r, c })), wordData.color);
+    _cb.onFound?.(wordData, earned);
+    if (S.words.every(w => w.found)) setTimeout(() => _triggerVictory(), 400);
+  }
+
+  function _wordMissed() {
+    S.errors++; S.combo = 1;
+    _cb.onError?.();
+    if (S.errors >= S.levelData.maxErrors) _triggerDefeat();
+  }
+
+  // ... [Manter as funções start, pause, resume, _triggerVictory, _triggerDefeat do seu original] ...
+
+  return { on, _handleSelection, /* ... manter demais exports ... */ };
+})();
+
                                
