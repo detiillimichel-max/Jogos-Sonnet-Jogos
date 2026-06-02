@@ -1,86 +1,160 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>ELO Caça Palavras</title>
-<link rel="stylesheet" href="css/main.css" />
+<style>
+:root{--bg:#0f0f1a;--panel:#17172a;--panel-2:#1e1e35;--text:#e8e8f0;--muted:#9aa0b5;--cyan:#00e5ff;--yellow:#ffcc00;--green:#00e676}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}
+.screen{display:none;min-height:100vh;padding:16px}.screen.active{display:block}
+.btn-icon,.btn-primary,.btn-ghost{border:0;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
+.btn-icon{background:var(--panel-2);color:var(--text);font-size:18px}
+.btn-primary{background:var(--cyan);color:#001}.btn-ghost{background:transparent;color:var(--muted);border:1px solid #333}
+.home-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.home-actions{display:flex;gap:8px;align-items:center}
+.coins{font-weight:700}
+.theme-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.theme-card{background:var(--panel);padding:16px;border-radius:16px;text-align:left}
+.theme-card h3{margin:0 0 4px}
+.theme-card p{margin:0;color:var(--muted);font-size:13px}
+.game-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.timer{font-size:24px;font-weight:800;color:var(--cyan)}
+.combo{color:var(--yellow);font-weight:700}
+.word-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{background:var(--panel-2);padding:6px 12px;border-radius:999px;font-weight:700;font-size:14px}
+.chip.found{opacity:.4;text-decoration:line-through}
+.grid{display:grid;gap:6px;touch-action:none;user-select:none}
+.cell{background:var(--panel);border:2px solid #2a2a40;border-radius:10px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}
+.cell.is-selecting{background:#0b3b4a;border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,.4)}
+.cell.is-selecting-start{outline:3px solid var(--cyan)}
+.cell.found-0{background:#0a3d2e;border-color:var(--green)}.cell.found-1{background:#3a2a06;border-color:var(--yellow)}
+.cell.found-2{background:#2a1a4a;border-color:#b388ff}.cell.found-3{background:#3a1020;border-color:#ff4d6d}.cell.found-4{background:#0a2a4a;border-color:#4dabf7}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000c;padding:10px 16px;border-radius:12px;opacity:0;transition:.2s}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.modal.active{display:flex}
+.modal-card{background:var(--panel);padding:24px;border-radius:20px;min-width:260px;text-align:center}
+.shop-header{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #2a2a40;margin-bottom:12px}
+.shop-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.shop-item{background:var(--panel-2);border:1px solid #2a2a40;border-radius:14px;padding:14px;text-align:center;display:flex;flex-direction:column;gap:8px}
+.shop-item h3{margin:0;font-size:16px}.shop-item p{margin:0;color:var(--muted);font-size:13px;min-height:32px}
+.shop-item.price{font-weight:700;color:var(--yellow)}.shop-item.is-owned{opacity:.6}.shop-item.is-owned button{pointer-events:none;background:#333}
+.do-pop{animation:pop.25s ease}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+.shake{animation:shake.3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+</style>
 </head>
 <body>
-  <!-- HOME -->
-  <section id="screenHome" class="screen active">
-    <div class="home-header">
-      <h1>ELO</h1>
-      <div class="home-actions">
-        <div class="coins">🪙 <span id="homeCoins">0</span></div>
-        <button id="btnShop" class="btn-icon" aria-label="Loja">🛒</button>
-      </div>
-    </div>
-    <div id="themeGrid" class="theme-grid"></div>
-  </section>
 
-  <!-- GAME -->
-  <section id="screenGame" class="screen">
-    <div class="game-header">
-      <button id="btnPause" class="btn-icon">⏸</button>
-      <div class="timer"><span id="timer">90</span>s</div>
-      <div class="combo">×<span id="combo">1</span></div>
-      <div class="coins">🪙 <span id="gameCoins">0</span></div>
+<section id="screenHome" class="screen active">
+  <div class="home-header">
+    <h1>ELO</h1>
+    <div class="home-actions">
+      <div class="coins">🪙 <span id="homeCoins">0</span></div>
+      <button id="btnShop" class="btn-icon">🛒</button>
     </div>
-    <div id="wordChips" class="word-chips"></div>
-    <div id="grid" class="grid"></div>
-    <div id="toast" class="toast"></div>
-  </section>
+  </div>
+  <div id="themeGrid" class="theme-grid"></div>
+</section>
 
-  <!-- PAUSE -->
-  <section id="screenPause" class="screen modal">
-    <div class="modal-card">
-      <h2>Pausado</h2>
-      <button id="btnResume" class="btn-primary">Continuar</button>
-      <button id="btnQuit" class="btn-ghost">Sair</button>
-    </div>
-  </section>
+<section id="screenGame" class="screen">
+  <div class="game-header">
+    <button id="btnPause" class="btn-icon">⏸</button>
+    <div class="timer"><span id="timer">90</span>s</div>
+    <div class="combo">×<span id="combo">1</span></div>
+    <div class="coins">🪙 <span id="gameCoins">0</span></div>
+  </div>
+  <div id="wordChips" class="word-chips"></div>
+  <div id="grid" class="grid"></div>
+  <div id="toast" class="toast"></div>
+</section>
 
-  <!-- VICTORY -->
-  <section id="screenVictory" class="screen modal">
-    <div class="modal-card">
-      <h2>Vitória!</h2>
-      <p id="vStats"></p>
-      <button id="btnNext" class="btn-primary">Próxima fase</button>
-      <button id="btnVHome" class="btn-ghost">Home</button>
-    </div>
-  </section>
+<section id="screenPause" class="screen modal">
+  <div class="modal-card">
+    <h2>Pausado</h2>
+    <button id="btnResume" class="btn-primary">Continuar</button>
+    <button id="btnQuit" class="btn-ghost">Sair</button>
+  </div>
+</section>
 
-  <!-- DEFEAT -->
-  <section id="screenDefeat" class="screen modal">
-    <div class="modal-card">
-      <h2>Fim de jogo</h2>
-      <p id="dReason"></p>
-      <button id="btnRetry" class="btn-primary">Tentar de novo</button>
-      <button id="btnDHome" class="btn-ghost">Home</button>
-    </div>
-  </section>
+<section id="screenVictory" class="screen modal">
+  <div class="modal-card">
+    <h2>Vitória!</h2>
+    <p id="vStats"></p>
+    <button id="btnNext" class="btn-primary">Próxima fase</button>
+    <button id="btnVHome" class="btn-ghost">Home</button>
+  </div>
+</section>
 
-  <!-- SHOP -->
-  <section id="screenShop" class="screen">
-    <div class="shop-header">
-      <h2>Loja</h2>
-      <div class="coins">🪙 <span id="shopCoins">0</span></div>
-      <button id="btnShopClose" class="btn-icon">✕</button>
-    </div>
-    <div id="shopGrid" class="shop-grid"></div>
-  </section>
+<section id="screenDefeat" class="screen modal">
+  <div class="modal-card">
+    <h2>Fim de jogo</h2>
+    <p id="dReason"></p>
+    <button id="btnRetry" class="btn-primary">Tentar de novo</button>
+    <button id="btnDHome" class="btn-ghost">Home</button>
+  </div>
+</section>
 
-  <!-- SCRIPTS -->
-  <script src="js/data/words.js"></script>
-  <script src="js/services/storage.js"></script>
-  <script src="js/services/audio.js"></script>
-  <script src="js/engine/grid.js"></script>
-  <script src="js/engine/selection.js"></script>
-  <script src="js/engine/game.js"></script>
-  <script src="js/components/hud.js"></script>
-  <script src="js/components/screens.js"></script>
-  <script src="js/components/shop.js"></script>
-  <script src="js/app.js"></script>
+<section id="screenShop" class="screen">
+  <div class="shop-header">
+    <h2>Loja</h2>
+    <div class="coins">🪙 <span id="shopCoins">0</span></div>
+    <button id="btnShopClose" class="btn-icon">✕</button>
+  </div>
+  <div id="shopGrid" class="shop-grid"></div>
+</section>
+
+<script>
+/* ===== STORAGE ===== */
+const GameStorage={k:'elo_coins',getCoins(){return+localStorage.getItem(this.k)||0},addCoins(n){const t=this.getCoins()+n;localStorage.setItem(this.k,t);return t},spendCoins(n){const c=this.getCoins();if(c<n)return false;localStorage.setItem(this.k,c-n);return true}};
+
+/* ===== AUDIO ===== */
+const AudioFX=(()=>{let ctx;const e=()=>{if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)()};const b=(f,d,t='sine',v=.2)=>{e();const o=ctx.createOscillator(),g=ctx.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;o.connect(g).connect(ctx.destination);o.start();o.stop(ctx.currentTime+d)};return{success(){b(880,.12);setTimeout(()=>b(1320,.15),100);navigator.vibrate&&navigator.vibrate(30)},error(){b(200,.25,'sawtooth',.15);navigator.vibrate&&navigator.vibrate([50,30,50])}}})();
+
+/* ===== WORDS ===== */
+const WordData={themes:[{id:'paises',name:'Países',levels:[{size:8,words:['CHILE','CHINA','CUBA','PERU','IRAQ']}]}]};
+
+/* ===== GRID ===== */
+const GridEngine=(()=>{const A='ABCDEFGHIJKLMNOPQRSTUVWXYZ';const R=(m)=>Math.floor(Math.random()*m);const E=(s)=>Array.from({length:s},()=>Array(s).fill(''));function G(t,l){const {size,words}=t.levels[l];for(let a=0;a<50;a++){const r=T(size,words);if(r)return r}return T(size,words)}function T(s,ws){const g=E(s),p=[];[...ws].sort(()=>Math.random()-.5).forEach(w=>{for(let a=0;a<200;a++){const d=[[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]][R(8)],r0=R(s),c0=R(s),er=r0+d[0]*(w.length-1),ec=c0+d[1]*(w.length-1);if(er<0||er>=s||ec<0||ec>=s)continue;let ok=true,cells=[];for(let i=0;i<w.length;i++){const r=r0+d[0]*i,c=c0+d[1]*i,ch=g[r][c];if(ch&&ch!==w[i]){ok=false;break}cells.push({r,c})}if(!ok)continue;cells.forEach((c,i)=>g[c.r][c.c]=w[i]);p.push({word:w,cells});break}});for(let r=0;r<s;r++)for(let c=0;c<s;c++)if(!g[r][c])g[r][c]=A[R(26)];return{grid:g,placed:p}}return{generate:G}})();
+
+/* ===== SELECTION ===== */
+const SelectionEngine=(()=>{let G,S,onSel,act=false,st=null,cells=[];const dirs=[[0,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1],[1,1]];const cellAt=(x,y)=>{const e=document.elementFromPoint(x,y)?.closest('.cell');return e&&G.contains(e)?{r:+e.dataset.r,c:+e.dataset.c}:null};const line=(a,b)=>{const dr=b.r-a.r,dc=b.c-a.c;if(!dr&&!dc)return[a];const L=Math.hypot(dr,dc)||1,nx=dc/L,ny=dr/L;let best=dirs[0],bd=-9;for(const [dR,dC]of dirs){const d=ny*dR+nx*dC;if(d>bd){bd=d;best=[dR,dC]}}const[sr,sc]=best,n=Math.max(Math.abs(dr),Math.abs(dc)),o=[];for(let i=0;i<=n;i++){const r=a.r+sr*i,c=a.c+sc*i;if(r<0||c<0||r>=S||c>=S)break;o.push({r,c})}return o};const paint=()=>{G.querySelectorAll('.is-selecting,.is-selecting-start').forEach(e=>e.classList.remove('is-selecting','is-selecting-start'));cells.forEach(({r,c},i)=>{const e=G.querySelector(`[data-r="${r}"][data-c="${c}"]`);if(!e)return;e.classList.add('is-selecting');if(!i)e.classList.add('is-selecting-start')})};const finish=()=>{const w=cells.map(({r,c})=>G.querySelector(`[data-r="${r}"][data-c="${c}"]`)?.textContent||'').join('');onSel?.(cells,w);cells=[];paint();act=false;st=null};return{init(g,sz,fn){G=g;S=sz;onSel=fn;G.style.touchAction='none';G.addEventListener('pointerdown',e=>{const c=cellAt(e.clientX,e.clientY);if(!c)return;e.preventDefault();act=true;st=c;cells=[c];paint()});window.addEventListener('pointermove',e=>{if(!act||!st)return;const c=cellAt(e.clientX,e.clientY);if(!c)return;cells=line(st,c);paint()});window.addEventListener('pointerup',e=>{if(!act)return;finish()});G.addEventListener('touchstart',e=>{const t=e.touches[0];const c=cellAt(t.clientX,t.clientY);if(!c)return;e.preventDefault();act=true;st=c;cells=[c];paint()},{passive:false});window.addEventListener('touchmove',e=>{if(!act||!st)return;const t=e.touches[0];const c=cellAt(t.clientX,t.clientY);if(!c)return;cells=line(st,c);paint()},{passive:false});window.addEventListener('touchend',()=>{if(!act)return;finish()})},markFound(cs,ci){cs.forEach(({r,c})=>{const e=G.querySelector(`[data-r="${r}"][data-c="${c}"]`);if(!e)return;e.classList.remove('is-selecting','is-selecting-start');e.classList.add(`found-${ci}`,'do-pop');e.addEventListener('animationend',()=>e.classList.remove('do-pop'),{once:true})})}}})();
+
+/* ===== GAME ===== */
+const GameEngine=(()=>{let st={theme:null,level:0,size:8,words:[],placed:[],found:new Set(),timer:90,combo:1,coins:GameStorage.getCoins(),running:false},tm=null,ev={};const emit=(e,...a)=>(ev[e]||[]).forEach(f=>f(...a));const on=(e,f)=>(ev[e]=ev[e]||[]).push(f);function start(tid,li=0){const th=WordData.themes.find(t=>t.id===tid);const {grid,placed}=GridEngine.generate(th,li);st={...st,theme:tid,level:li,size:th.levels[li].size,words:th.levels[li].words.map((w,i)=>({word:w,found:false,color:i%5})),placed,found:new Set(),timer:90,combo:1,running:true};renderGrid(grid);SelectionEngine.init(document.getElementById('grid'),st.size,onSelect);tick();return{words:st.words,size:st.size}}function renderGrid(g){const el=document.getElementById('grid');el.innerHTML='';el.style.gridTemplateColumns=`repeat(${st.size},1fr)`;g.forEach((row,r)=>row.forEach((ch,c)=>{const d=document.createElement('div');d.className='cell';d.dataset.r=r;d.dataset.c=c;d.textContent=ch;el.appendChild(d)}))}function onSelect(cells,word){const w=word.toUpperCase(),rw=[...w].reverse().join('');const hit=st.placed.find(p=>p.word===w||p.word===rw);if(hit&&!st.found.has(hit.word)){st.found.add(hit.word);const wd=st.words.find(x=>x.word===hit.word);wd.found=true;const earn=10*wd.word.length*st.combo;st.coins=GameStorage.addCoins(earn);SelectionEngine.markFound(hit.cells,wd.color);emit('Found',wd,earn);emit('Coins',st.coins);st.combo++;emit('Combo',st.combo);if(st.found.size===st.words.length){stop();emit('Victory',{coins:st.coins})}}else{st.combo=1;emit('Combo',1);emit('Error')}}function tick(){clearInterval(tm);tm=setInterval(()=>{if(!st.running)return;st.timer--;emit('Tick',st.timer);if(st.timer<=0){stop();emit('Defeat','Tempo esgotado')}},1000)}function stop(){clearInterval(tm);st.running=false}return{start,on,getState:()=>st,pause(){st.running=false},resume(){st.running=true},nextLevel(){return start(st.theme,st.level+1)},restart(){return start(st.theme,st.level)}}} )();
+
+/* ===== HUD ===== */
+const HUD={setTimer(t){document.getElementById('timer').textContent=t},setCombo(c){document.getElementById('combo').textContent=c},setCoins(c){document.getElementById('gameCoins').textContent=c;document.getElementById('homeCoins').textContent=c},renderWords(ws){const el=document.getElementById('wordChips');el.innerHTML='';ws.forEach(w=>{const s=document.createElement('span');s.className='chip';s.dataset.word=w.word;s.textContent=w.word;el.appendChild(s)})},markWordFound(w){document.querySelector(`.chip[data-word="${w}"]`)?.classList.add('found')},showToast(msg,err){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1200)},shakeGrid(){const g=document.getElementById('grid');g.classList.add('shake');setTimeout(()=>g.classList.remove('shake'),300)}};
+
+/* ===== SCREENS ===== */
+const Screens={show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id)?.classList.add('active')},renderThemes(cb){const g=document.getElementById('themeGrid');g.innerHTML='';WordData.themes.forEach(t=>{const c=document.createElement('button');c.className='theme-card';c.innerHTML=`<h3>${t.name}</h3><p>${t.levels.length} níveis</p>`;c.onclick=()=>cb(t.id,0);g.appendChild(c)})},showVictory(s){document.getElementById('vStats').textContent=`Moedas: ${s.coins}`;document.getElementById('screenVictory').classList.add('active')},showDefeat(r){document.getElementById('dReason').textContent=r;document.getElementById('screenDefeat').classList.add('active')},openPause(){document.getElementById('screenPause').classList.add('active')},closePause(){document.getElementById('screenPause').classList.remove('active')}};
+
+/* ===== SHOP ===== */
+const Shop=(()=>{const ITEMS=[{id:'hint',name:'Dica',desc:'Revela 1 letra',price:50},{id:'time',name:'+15s',desc:'Adiciona tempo',price:80}];function open(){document.getElementById('shopCoins').textContent=GameStorage.getCoins();render();Screens.show('screenShop')}function render(){const g=document.getElementById('shopGrid');g.innerHTML='';ITEMS.forEach(it=>{const d=document.createElement('div');d.className='shop-item';d.innerHTML=`<h3>${it.name}</h3><p>${it.desc}</p><div class="price">🪙 ${it.price}</div><button class="btn-primary">Comprar</button>`;d.querySelector('button').onclick=()=>buy(it);g.appendChild(d)})}function buy(it){if(!GameStorage.spendCoins(it.price)){HUD.showToast('Moedas insuficientes!',true);AudioFX.error();return}if(it.id==='time'){const st=GameEngine.getState();if(st.timer>0){st.timer+=15;HUD.setTimer(st.timer)}}AudioFX.success();HUD.setCoins(GameStorage.getCoins());document.getElementById('shopCoins').textContent=GameStorage.getCoins()}return{open}})();
+
+/* ===== APP ===== */
+document.addEventListener('DOMContentLoaded',()=>{
+  HUD.setCoins(GameStorage.getCoins());
+  Screens.renderThemes((t,l)=>{const r=GameEngine.start(t,l);HUD.renderWords(r.words);HUD.setTimer(90);HUD.setCombo(1);Screens.show('screenGame')});
+  GameEngine.on('Tick',t=>HUD.setTimer(t));
+  GameEngine.on('Combo',c=>HUD.setCombo(c));
+  GameEngine.on('Found',(w,e)=>{HUD.markWordFound(w.word);HUD.showToast(`+${e} 🪙`);AudioFX.success()});
+  GameEngine.on('Error',()=>{HUD.showToast('Errado!',true);AudioFX.error()});
+  GameEngine.on('Coins',c=>HUD.setCoins(c));
+  GameEngine.on('Victory',s=>Screens.showVictory(s));
+  GameEngine.on('Defeat',r=>Screens.showDefeat(r));
+  document.getElementById('btnPause').onclick=()=>{GameEngine.pause();Screens.openPause()};
+  document.getElementById('btnResume').onclick=()=>{Screens.closePause();GameEngine.resume()};
+  document.getElementById('btnQuit').onclick=()=>{Screens.closePause();Screens.show('screenHome')};
+  document.getElementById('btnVHome').onclick=()=>Screens.show('screenHome');
+  document.getElementById('btnNext').onclick=()=>{const r=GameEngine.nextLevel();HUD.renderWords(r.words);Screens.show('screenGame');document.getElementById('screenVictory').classList.remove('active')};
+  document.getElementById('btnDHome').onclick=()=>Screens.show('screenHome');
+  document.getElementById('btnRetry').onclick=()=>{const r=GameEngine.restart();HUD.renderWords(r.words);Screens.show('screenGame');document.getElementById('screenDefeat').classList.remove('active')};
+  document.getElementById('btnShop').onclick=()=>Shop.open();
+  document.getElementById('btnShopClose').onclick=()=>Screens.show('screenHome');
+});
+</script>
 </body>
 </html>
