@@ -11,6 +11,7 @@ const SelectionEngine = (() => {
 
   let _startCell = null;
   let _curCells  = [];
+  let _lastValidCell = null; /* Adicionado para estabilidade no toque */
 
   /* ── Inicializa ─────────────────────── */
   function init(gridEl, gridSize, onSelect) {
@@ -65,6 +66,7 @@ const SelectionEngine = (() => {
 
     _startCell = null;
     _curCells  = [];
+    _lastValidCell = null;
   }
 
   /* ── Utilitários ────────────────────── */
@@ -74,8 +76,12 @@ const SelectionEngine = (() => {
     const pt  = e.touches?.[0] ?? e;
     const el  = document.elementFromPoint(pt.clientX, pt.clientY);
     const cell = el?.closest('[data-r]');
-    if (!cell) return null;
-    return { r: +cell.dataset.r, c: +cell.dataset.c };
+    
+    if (cell) {
+        _lastValidCell = { r: +cell.dataset.r, c: +cell.dataset.c };
+        return _lastValidCell;
+    }
+    return _lastValidCell;
   }
 
   /**
@@ -154,3 +160,4 @@ const SelectionEngine = (() => {
   return { init, markFound };
 
 })();
+                         
