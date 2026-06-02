@@ -1,22 +1,13 @@
-/* ════════════════════════════════════════
-   storage.js — Persistência do jogo
-════════════════════════════════════════ */
-
 const GameStorage = (() => {
+  const KEYS = { coins: 'elo_coins_v1', progress: 'elo_progress_v1' };
 
-  const KEYS = {
-    coins:    'elo_coins_v1',
-    progress: 'elo_progress_v1',
-  };
-
-  /* ── Moedas ───────────────────────── */
   function getCoins() {
     return parseInt(localStorage.getItem(KEYS.coins) || '0', 10);
   }
 
   function addCoins(amount) {
     const current = getCoins();
-    const next    = current + amount;
+    const next = current + amount;
     localStorage.setItem(KEYS.coins, next);
     return next;
   }
@@ -28,11 +19,8 @@ const GameStorage = (() => {
     return true;
   }
 
-  /* ── Progresso por tema ───────────── */
   function getProgress() {
-    try {
-      return JSON.parse(localStorage.getItem(KEYS.progress) || '{}');
-    } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem(KEYS.progress) || '{}'); } catch { return {}; }
   }
 
   function saveProgress(themeId, levelIndex, stars) {
@@ -49,5 +37,4 @@ const GameStorage = (() => {
   }
 
   return { getCoins, addCoins, spendCoins, saveProgress, getLevelStars };
-
 })();
