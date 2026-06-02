@@ -7,6 +7,7 @@
 
     /* ── Moedas iniciais ──────────────── */
     HUD.setCoins(GameStorage.getCoins());
+    document.getElementById('homeCoins').textContent = GameStorage.getCoins();
 
     /* ── Renderiza home ───────────────── */
     Screens.renderThemes(_startGame);
@@ -23,16 +24,19 @@
 
     GameEngine.on('Found', (wordData, earned) => {
       HUD.markWordFound(wordData.word, wordData.color);
-      HUD.showToast(`+${earned} 🪙  ×${GameEngine.getState().combo}`);
+      HUD.showToast(`+${earned} 🪙 ×${GameEngine.getState().combo}`);
+      AudioFX.success();
     });
 
     GameEngine.on('Error', () => {
       HUD.shakeGrid();
       HUD.showToast('Errado! ✕', true);
+      AudioFX.error();
     });
 
     GameEngine.on('Coins', (total) => {
       HUD.setCoins(total);
+      document.getElementById('homeCoins').textContent = total;
     });
 
     GameEngine.on('Victory', (stats) => {
@@ -45,17 +49,15 @@
 
     /* ── Botões de controle ───────────── */
 
-    /* Pausa */
+    // Pausa
     document.getElementById('btnPause').addEventListener('click', () => {
       GameEngine.pause();
       Screens.openPause();
     });
-
     document.getElementById('btnResume').addEventListener('click', () => {
       Screens.closePause();
       GameEngine.resume();
     });
-
     document.getElementById('btnQuit').addEventListener('click', () => {
       Screens.closePause();
       GameEngine.pause();
@@ -63,12 +65,11 @@
       Screens.show('screenHome');
     });
 
-    /* Vitória */
+    // Vitória
     document.getElementById('btnVHome').addEventListener('click', () => {
       HUD.setCoins(GameStorage.getCoins());
       Screens.show('screenHome');
     });
-
     document.getElementById('btnNext').addEventListener('click', () => {
       const result = GameEngine.nextLevel();
       if (result) {
@@ -80,17 +81,20 @@
       }
     });
 
-    /* Derrota */
+    // Derrota
     document.getElementById('btnDHome').addEventListener('click', () => {
       HUD.setCoins(GameStorage.getCoins());
       Screens.show('screenHome');
     });
-
     document.getElementById('btnRetry').addEventListener('click', () => {
       const result = GameEngine.restart();
       _onGameStarted(result);
       Screens.show('screenGame');
     });
+
+    // Loja
+    document.getElementById('btnShop').addEventListener('click', () => Shop.open());
+    document.getElementById('btnShopClose').addEventListener('click', () => Screens.show('screenHome'));
   });
 
   /* ── Iniciar uma partida ──────────────── */
