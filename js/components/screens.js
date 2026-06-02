@@ -1,10 +1,4 @@
-/* ════════════════════════════════════════
-   screens.js — Gerencia telas e home
-════════════════════════════════════════ */
-
 const Screens = (() => {
-
-  /* ── Troca de tela ──────────────────── */
   function show(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('is-active'));
     const target = document.getElementById(id);
@@ -14,36 +8,28 @@ const Screens = (() => {
     }
   }
 
-  /* ── Renderiza grid de temas ────────── */
   function renderThemes(onSelect) {
     const container = document.getElementById('themeGrid');
     if (!container) return;
-
     container.innerHTML = '';
     WordData.themes.forEach(theme => {
       const card = document.createElement('div');
       card.className = 'theme-card';
       card.style.setProperty('--theme-color', theme.color);
       card.style.borderColor = theme.color + '55';
-      card.style.boxShadow   = `0 0 16px ${theme.color}22`;
-
+      card.style.boxShadow = `0 0 16px ${theme.color}22`;
       card.innerHTML = `
         <div class="theme-icon">${theme.icon}</div>
         <div class="theme-name">${theme.name}</div>
         <div class="theme-levels">${theme.levels.length} níveis</div>
       `;
-
-      card.querySelector('.theme-icon').style.filter =
-        `drop-shadow(0 0 8px ${theme.color})`;
-
+      card.querySelector('.theme-icon').style.filter = `drop-shadow(0 0 8px ${theme.color})`;
       card.addEventListener('click', () => onSelect(theme.id, 0));
       container.appendChild(card);
     });
   }
 
-  /* ── Tela de vitória ────────────────── */
   function showVictory(stats) {
-    /* Estrelas */
     ['s1','s2','s3'].forEach((id, i) => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -52,8 +38,6 @@ const Screens = (() => {
         el.style.animationDelay = `${i * 0.15}s`;
       }
     });
-
-    /* Estatísticas */
     const statsEl = document.getElementById('resultStats');
     if (statsEl) {
       statsEl.innerHTML = `
@@ -62,18 +46,15 @@ const Screens = (() => {
         <div class="stat-row"><span>Erros</span><span>❌ ${stats.errors}</span></div>
       `;
     }
-
     show('screenVictory');
   }
 
-  /* ── Tela de derrota ────────────────── */
   function showDefeat(reason) {
     const el = document.getElementById('defeatMsg');
     if (el) el.textContent = reason;
     show('screenDefeat');
   }
 
-  /* ── Pausa ──────────────────────────── */
   function openPause() {
     const el = document.getElementById('overlayPause');
     if (el) { el.classList.add('is-open'); el.setAttribute('aria-hidden', 'false'); }
@@ -85,5 +66,4 @@ const Screens = (() => {
   }
 
   return { show, renderThemes, showVictory, showDefeat, openPause, closePause };
-
 })();
