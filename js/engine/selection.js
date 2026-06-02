@@ -1,36 +1,31 @@
 /* ════════════════════════════════════════
    selection.js — Arrastar e selecionar
-   Suporta mouse e touch com direção snapped
+   Versão Estabilizada
 ════════════════════════════════════════ */
 
 const SelectionEngine = (() => {
 
   let _gridEl   = null;
   let _gridSize = 10;
-  let _onSelect = null; /* callback(cells, word) */
+  let _onSelect = null;
 
   let _startCell = null;
   let _curCells  = [];
-  let _lastValidCell = null; 
+  let _lastValidCell = null;
 
-  /* ── Inicializa ─────────────────────── */
   function init(gridEl, gridSize, onSelect) {
     _gridEl   = gridEl;
     _gridSize = gridSize;
     _onSelect = onSelect;
 
-    /* Mouse */
     gridEl.addEventListener('mousedown',  _start);
     gridEl.addEventListener('mousemove',  _move);
     window.addEventListener('mouseup',    _end);
-
-    /* Touch */
     gridEl.addEventListener('touchstart', _start, { passive: false });
     gridEl.addEventListener('touchmove',  _move,  { passive: false });
     window.addEventListener('touchend',   _end);
   }
 
-  /* ── Eventos ────────────────────────── */
   function _start(e) {
     e.preventDefault();
     const cell = _cellFromEvent(e);
@@ -51,25 +46,17 @@ const SelectionEngine = (() => {
 
   function _end(e) {
     if (!_startCell) return;
-
-    /* Lê as letras das células selecionadas */
     const word = _curCells.map(({ r, c }) => {
       const el = _gridEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
       return el ? el.textContent.trim() : '';
     }).join('');
 
-    _onSelect?.([..._curCells], word);
+    _onSelect?.([..._curCells], word.trim());
 
-    /* Limpa highlight temporário */
     _gridEl.querySelectorAll('.is-selecting, .is-selecting-start')
       .forEach(el => el.classList.remove('is-selecting', 'is-selecting-start'));
-
-    _startCell = null;
-    _curCells  = [];
-    _lastValidCell = null;
+    _startCell = null; _curCells = []; _lastValidCell = null;
   }
-
-  /* ── Utilitários ────────────────────── */
 
   function _cellFromEvent(e) {
     const pt  = e.touches?.[0] ?? e;
@@ -87,16 +74,11 @@ const SelectionEngine = (() => {
     const dc = end.c - start.c;
     if (dr === 0 && dc === 0) return [start];
     const angle = Math.atan2(dr, dc);
-    const PI    = Math.PI;
+    const PI = Math.PI;
     const SNAPS = [
-      { dir: [0,  1], a:  0        },
-      { dir: [1,  1], a:  PI / 4   },
-      { dir: [1,  0], a:  PI / 2   },
-      { dir: [1, -1], a:  3*PI / 4 },
-      { dir: [0, -1], a:  PI       },
-      { dir: [-1,-1], a: -3*PI / 4 },
-      { dir: [-1, 0], a: -PI / 2   },
-      { dir: [-1, 1], a: -PI / 4   },
+      { dir: [0, 1], a: 0 }, { dir: [1, 1], a: PI/4 }, { dir: [1, 0], a: PI/2 },
+      { dir: [1, -1], a: 3*PI/4 }, { dir: [0, -1], a: PI }, { dir: [-1, -1], a: -3*PI/4 },
+      { dir: [-1, 0], a: -PI/2 }, { dir: [-1, 1], a: -PI/4 }
     ];
     let best = SNAPS[0], minDiff = Infinity;
     for (const s of SNAPS) {
@@ -110,9 +92,7 @@ const SelectionEngine = (() => {
     for (let i = 0; i <= steps; i++) {
       const r = start.r + sdr * i;
       const c = start.c + sdc * i;
-      if (r >= 0 && r < _gridSize && c >= 0 && c < _gridSize) {
-        cells.push({ r, c });
-      }
+      if (r >= 0 && r < _gridSize && c >= 0 && c < _gridSize) cells.push({ r, c });
     }
     return cells;
   }
@@ -134,11 +114,8 @@ const SelectionEngine = (() => {
       if (!el) return;
       el.classList.remove('is-selecting', 'is-selecting-start');
       el.classList.add(`found-${colorIdx}`, 'do-pop');
-      el.addEventListener('animationend',
-        () => el.classList.remove('do-pop'), { once: true });
     });
   }
 
   return { init, markFound };
 })();
-                          
