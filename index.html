@@ -3,23 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>ELO Caça Palavras - Fácil</title>
+<title>ELO Caça Palavras</title>
 <style>
 :root{--bg:#0f0f1a;--panel:#17172a;--panel-2:#1e1e35;--text:#e8e8f0;--muted:#9aa0b5;--cyan:#00e5ff;--yellow:#ffcc00;--green:#00e676}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}
 .screen{display:none;min-height:100vh;padding:16px}.screen.active{display:block}
 .btn-icon,.btn-primary,.btn-ghost{border:0;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
-.btn-icon{background:var(--panel-2);color:var(--text);font-size:18px}
+.btn-icon{background:var(--panel-2);color:var(--text);font-size:18px;position:relative}
+.btn-icon.badge{position:absolute;top:-6px;right:-6px;background:var(--yellow);color:#000;font-size:11px;padding:2px 6px;border-radius:999px;font-weight:800}
 .btn-primary{background:var(--cyan);color:#001}.btn-ghost{background:transparent;color:var(--muted);border:1px solid #333}
 .home-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .home-actions{display:flex;gap:8px;align-items:center}
 .coins{font-weight:700}
 .theme-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
 .theme-card{background:var(--panel);padding:16px;border-radius:16px;text-align:left}
-.theme-card h3{margin:0 0 4px}
-.theme-card p{margin:0;color:var(--muted);font-size:13px}
-.game-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.timer{font-size:24px;font-weight:800;color:var(--cyan)}
+.game-header{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap}
+.hud-left{display:flex;gap:8px;align-items:center}
+.hud-right{display:flex;gap:8px;align-items:center}
+.timer{font-size:22px;font-weight:800;color:var(--cyan)}
 .combo{color:var(--yellow);font-weight:700}
 .word-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .chip{background:var(--panel-2);padding:6px 12px;border-radius:999px;font-weight:700;font-size:14px}
@@ -28,13 +29,19 @@
 .cell{background:var(--panel);border:2px solid #2a2a40;border-radius:12px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:24px}
 .cell.is-selecting{background:#0b3b4a;border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,.4)}
 .cell.is-selecting-start{outline:3px solid var(--cyan)}
-.cell.found-0{background:#0a3d2e;border-color:var(--green)}.cell.found-1{background:#3a2a06;border-color:var(--yellow)}
-.cell.found-2{background:#2a1a4a;border-color:#b388ff}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000c;padding:10px 16px;border-radius:12px;opacity:0;transition:.2s}
+.cell.found-0{background:#0a3d2e;border-color:var(--green)}.cell.found-1{background:#3a2a06;border-color:var(--yellow)}.cell.found-2{background:#2a1a4a;border-color:#b388ff}
+.cell.hint{animation:hint 1s ease 3}
+@keyframes hint{0%,100%{transform:scale(1)}50%{transform:scale(1.1);box-shadow:0 0 20px rgba(255,204,0,.8)}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000c;padding:10px 16px;border-radius:12px;opacity:0;transition:.2s;z-index:100}
 .toast.show{opacity:1}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
 .modal.active{display:flex}
 .modal-card{background:var(--panel);padding:24px;border-radius:20px;min-width:260px;text-align:center}
+.shop-header{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #2a2a40;margin-bottom:12px}
+.shop-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.shop-item{background:var(--panel-2);border:1px solid #2a2a40;border-radius:14px;padding:16px;text-align:center;display:flex;flex-direction:column;gap:8px}
+.shop-item h3{margin:0}.shop-item p{margin:0;color:var(--muted);font-size:13px;min-height:32px}
+.shop-item.price{font-weight:700;color:var(--yellow)}
 .do-pop{animation:pop.25s ease}
 @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
 </style>
@@ -44,21 +51,39 @@
 <section id="screenHome" class="screen active">
   <div class="home-header">
     <h1>ELO</h1>
-    <div class="coins">🪙 <span id="homeCoins">0</span></div>
+    <div class="home-actions">
+      <div class="coins">🪙 <span id="homeCoins">0</span></div>
+      <button id="btnShop" class="btn-icon">🛒</button>
+    </div>
   </div>
   <div id="themeGrid" class="theme-grid"></div>
 </section>
 
 <section id="screenGame" class="screen">
   <div class="game-header">
-    <button id="btnPause" class="btn-icon">⏸</button>
-    <div class="timer"><span id="timer">180</span>s</div>
-    <div class="combo">×<span id="combo">1</span></div>
-    <div class="coins">🪙 <span id="gameCoins">0</span></div>
+    <div class="hud-left">
+      <button id="btnPause" class="btn-icon">⏸</button>
+      <div class="timer"><span id="timer">180</span>s</div>
+      <div class="combo">×<span id="combo">1</span></div>
+    </div>
+    <div class="hud-right">
+      <button id="btnHint" class="btn-icon">💡<span class="badge" id="badgeHint">0</span></button>
+      <button id="btnTime" class="btn-icon">⏱️<span class="badge" id="badgeTime">0</span></button>
+      <div class="coins">🪙 <span id="gameCoins">0</span></div>
+    </div>
   </div>
   <div id="wordChips" class="word-chips"></div>
   <div id="grid" class="grid"></div>
   <div id="toast" class="toast"></div>
+</section>
+
+<section id="screenShop" class="screen">
+  <div class="shop-header">
+    <h2>Loja</h2>
+    <div class="coins">🪙 <span id="shopCoins">0</span></div>
+    <button id="btnShopClose" class="btn-icon">✕</button>
+  </div>
+  <div id="shopGrid" class="shop-grid"></div>
 </section>
 
 <section id="screenPause" class="screen modal">
@@ -88,39 +113,45 @@
 </section>
 
 <script>
-const GameStorage={k:'elo_coins',getCoins(){return+localStorage.getItem(this.k)||0},addCoins(n){const t=this.getCoins()+n;localStorage.setItem(this.k,t);return t}};
+const Store={kCoins:'elo_coins',kInv:'elo_inv',getCoins(){return+localStorage.getItem(this.kCoins)||0},addCoins(n){const v=this.getCoins()+n;localStorage.setItem(this.kCoins,v);return v},spendCoins(n){const c=this.getCoins();if(c<n)return false;localStorage.setItem(this.kCoins,c-n);return true},getInv(){try{return JSON.parse(localStorage.getItem(this.kInv)||'{"hint":0,"time":0}')}catch{return{hint:0,time:0}}},setInv(o){localStorage.setItem(this.kInv,JSON.stringify(o))},addItem(id,q=1){const inv=this.getInv();inv[id]=(inv[id]||0)+q;this.setInv(inv)},useItem(id){const inv=this.getInv();if(!inv[id])return false;inv[id]--;this.setInv(inv);return true}};
 
 const WordData={themes:[
   {id:'animais',name:'Animais Fácil',levels:[{size:6,words:['GATO','BOLA','SOL']},{size:6,words:['PATO','RATO','UVA']}]},
   {id:'cores',name:'Cores',levels:[{size:6,words:['AZUL','ROSA','OURO']}]}
 ]};
 
-const GridEngine=(()=>{const A='ABCDEFGHIJKLMNOPQRSTUVWXYZ';const R=m=>Math.floor(Math.random()*m);const E=s=>Array.from({length:s},()=>Array(s).fill(''));function G(t,l){const{size,words}=t.levels[l];return T(size,words)}function T(s,ws){const g=E(s),p=[];[...ws].forEach(w=>{for(let a=0;a<200;a++){const d=[[0,1],[1,0]][R(2)],r0=R(s),c0=R(s),er=r0+d[0]*(w.length-1),ec=c0+d[1]*(w.length-1);if(er<0||er>=s||ec<0||ec>=s)continue;let ok=true,cells=[];for(let i=0;i<w.length;i++){const r=r0+d[0]*i,c=c0+d[1]*i,ch=g[r][c];if(ch&&ch!==w[i]){ok=false;break}cells.push({r,c})}if(!ok)continue;cells.forEach((c,i)=>g[c.r][c.c]=w[i]);p.push({word:w,cells});break}});for(let r=0;r<s;r++)for(let c=0;c<s;c++)if(!g[r][c])g[r][c]=A[R(26)];return{grid:g,placed:p}}return{generate:G}})();
+const GridEngine=(()=>{const A='ABCDEFGHIJKLMNOPQRSTUVWXYZ';const R=m=>Math.floor(Math.random()*m);const E=s=>Array.from({length:s},()=>Array(s).fill(''));function gen(t,l){const{size,words}=t.levels[l];return place(size,words)}function place(s,ws){const g=E(s),p=[];ws.forEach(w=>{for(let a=0;a<200;a++){const d=[[0,1],[1,0]][R(2)],r0=R(s),c0=R(s),er=r0+d[0]*(w.length-1),ec=c0+d[1]*(w.length-1);if(er<0||er>=s||ec<0||ec>=s)continue;let ok=true,cells=[];for(let i=0;i<w.length;i++){const r=r0+d[0]*i,c=c0+d[1]*i,ch=g[r][c];if(ch&&ch!==w[i]){ok=false;break}cells.push({r,c})}if(!ok)continue;cells.forEach(c=>g[c.r][c.c]=w[c.r===r0&&c.c===c0?0:cells.indexOf(c)]);p.push({word:w,cells});break}});for(let r=0;r<s;r++)for(let c=0;c<s;c++)if(!g[r][c])g[r][c]=A[R(26)];return{grid:g,placed:p}}return{gen}})();
 
-const SelectionEngine=(()=>{let G,S,onSel,act=false,st=null,cells=[];const dirs=[[0,1],[1,0],[0,-1],[-1,0]];const cellAt=(x,y)=>{const e=document.elementFromPoint(x,y)?.closest('.cell');return e&&G.contains(e)?{r:+e.dataset.r,c:+e.dataset.c}:null};const line=(a,b)=>{const dr=Math.sign(b.r-a.r),dc=Math.sign(b.c-a.c);const n=Math.max(Math.abs(b.r-a.r),Math.abs(b.c-a.c));const o=[];for(let i=0;i<=n;i++){const r=a.r+dr*i,c=a.c+dc*i;if(r<0||c<0||r>=S||c>=S)break;o.push({r,c})}return o};const paint=()=>{G.querySelectorAll('.is-selecting,.is-selecting-start').forEach(e=>e.classList.remove('is-selecting','is-selecting-start'));cells.forEach(({r,c},i)=>{const e=G.querySelector(`[data-r="${r}"][data-c="${c}"]`);if(!e)return;e.classList.add('is-selecting');if(!i)e.classList.add('is-selecting-start')})};const finish=()=>{onSel?.(cells);cells=[];paint();act=false;st=null};return{init(g,sz,fn){G=g;S=sz;onSel=fn;G.style.touchAction='none';const down=e=>{const c=cellAt(e.clientX,e.clientY);if(!c)return;e.preventDefault();act=true;st=c;cells=[c];paint()};const move=e=>{if(!act||!st)return;const c=cellAt(e.clientX,e.clientY);if(!c)return;cells=line(st,c);paint()};G.addEventListener('pointerdown',down);window.addEventListener('pointermove',move);window.addEventListener('pointerup',()=>{if(act)finish()});G.addEventListener('touchstart',e=>{const t=e.touches[0];down({clientX:t.clientX,clientY:t.clientY,preventDefault:()=>e.preventDefault()})},{passive:false});window.addEventListener('touchmove',e=>{if(!act)return;const t=e.touches[0];move({clientX:t.clientX,clientY:t.clientY})},{passive:false});window.addEventListener('touchend',()=>{if(act)finish()})},markFound(cs,ci){cs.forEach(({r,c})=>{const e=G.querySelector(`[data-r="${r}"][data-c="${c}"]`);if(!e)return;e.classList.add(`found-${ci}`,'do-pop');setTimeout(()=>e.classList.remove('do-pop'),250)})}}})();
+const SelectionEngine=(()=>{let G,S,onSel,act=false,st=null,cells=[];const cellAt=(x,y)=>{const e=document.elementFromPoint(x,y)?.closest('.cell');return e&&G.contains(e)?{r:+e.dataset.r,c:+e.dataset.c}:null};const line=(a,b)=>{const dr=Math.sign(b.r-a.r),dc=Math.sign(b.c-a.c);const n=Math.max(Math.abs(b.r-a.r),Math.abs(b.c-a.c));const o=[];for(let i=0;i<=n;i++)o.push({r:a.r+dr*i,c:a.c+dc*i});return o};const paint=()=>{G.querySelectorAll('.is-selecting,.is-selecting-start').forEach(e=>e.classList.remove('is-selecting','is-selecting-start'));cells.forEach(({r,c},i)=>{const e=G.querySelector(`[data-r="${r}"][data-c="${c}"]`);if(e){e.classList.add('is-selecting');if(!i)e.classList.add('is-selecting-start')}})};const finish=()=>{if(cells.length)onSel?.(cells);cells=[];paint();act=false;st=null};return{init(g,sz,fn){G=g;S=sz;onSel=fn;G.style.touchAction='none';const down=e=>{const c=cellAt(e.clientX,e.clientY);if(!c)return;act=true;st=c;cells=[c];paint()};const move=e=>{if(!act)return;const c=cellAt(e.clientX,e.clientY);if(!c)return;cells=line(st,c);paint()};G.addEventListener('pointerdown',down);window.addEventListener('pointermove',move);window.addEventListener('pointerup',()=>act&&finish());G.addEventListener('touchstart',e=>{const t=e.touches[0];down({clientX:t.clientX,clientY:t.clientY})},{passive:true});window.addEventListener('touchmove',e=>{if(!act)return;const t=e.touches[0];move({clientX:t.clientX,clientY:t.clientY})},{passive:true});window.addEventListener('touchend',()=>act&&finish())},markFound(cs,ci){cs.forEach(({r,c})=>document.querySelector(`[data-r="${r}"][data-c="${c}"]`)?.classList.add(`found-${ci}`,'do-pop'))},hintCell(r,c){const e=document.querySelector(`[data-r="${r}"][data-c="${c}"]`);if(e){e.classList.add('hint');setTimeout(()=>e.classList.remove('hint'),3000)}}}})();
 
-const GameEngine=(()=>{let st={theme:null,level:0,size:6,words:[],placed:[],found:new Set(),timer:180,combo:1,running:false},tm=null,ev={};const emit=(e,...a)=>(ev[e]||[]).forEach(f=>f(...a));const on=(e,f)=>(ev[e]=ev[e]||[]).push(f);function start(tid,li=0){const th=WordData.themes.find(t=>t.id===tid);const{grid,placed}=GridEngine.generate(th,li);st={...st,theme:tid,level:li,size:th.levels[li].size,words:th.levels[li].words.map((w,i)=>({word:w,found:false,color:i})),placed,found:new Set(),timer:180,combo:1,running:true};renderGrid(grid);SelectionEngine.init(document.getElementById('grid'),st.size,onSelect);tick();return{words:st.words}}function renderGrid(g){const el=document.getElementById('grid');el.innerHTML='';el.style.gridTemplateColumns=`repeat(${st.size},1fr)`;g.forEach((row,r)=>row.forEach((ch,c)=>{const d=document.createElement('div');d.className='cell';d.dataset.r=r;d.dataset.c=c;d.textContent=ch;el.appendChild(d)}))}function onSelect(cells){if(!cells.length)return;const selKey=cells.map(c=>`${c.r},${c.c}`).join('|');const hit=st.placed.find(p=>{const fwd=p.cells.map(c=>`${c.r},${c.c}`).join('|');const rev=[...p.cells].reverse().map(c=>`${c.r},${c.c}`).join('|');return fwd===selKey||rev===selKey});if(hit&&!st.found.has(hit.word)){st.found.add(hit.word);const wd=st.words.find(x=>x.word===hit.word);wd.found=true;const earn=10*wd.word.length*st.combo;GameStorage.addCoins(earn);SelectionEngine.markFound(hit.cells,wd.color);emit('Found',wd,earn);st.combo++;emit('Combo',st.combo);if(st.found.size===st.words.length){stop();emit('Victory')}}else{emit('Error')}}function tick(){clearInterval(tm);tm=setInterval(()=>{if(!st.running)return;st.timer--;emit('Tick',st.timer);if(st.timer<=0){stop();emit('Defeat')}},1000)}function stop(){clearInterval(tm);st.running=false}return{start,on,pause(){st.running=false},resume(){st.running=true},nextLevel(){const th=WordData.themes.find(t=>t.id===st.theme);const nl=(st.level+1)%th.levels.length;return start(st.theme,nl)},restart(){return start(st.theme,st.level)}}} )();
+const GameEngine=(()=>{let st={},tm=null,ev={};const emit=(e,...a)=>(ev[e]||[]).forEach(f=>f(...a));const on=(e,f)=>(ev[e]=ev[e]||[]).push(f);function start(tid,li){const th=WordData.themes.find(t=>t.id===tid);const{grid,placed}=GridEngine.gen(th,li);st={theme:tid,level:li,size:th.levels[li].size,words:th.levels[li].words.map((w,i)=>({word:w,found:false,color:i})),placed,found:new Set(),timer:180,combo:1,running:true};render(grid);SelectionEngine.init(document.getElementById('grid'),st.size,onSelect);tick();return{words:st.words}}function render(g){const el=document.getElementById('grid');el.innerHTML='';el.style.gridTemplateColumns=`repeat(${st.size},1fr)`;g.forEach((row,r)=>row.forEach((ch,c)=>{const d=document.createElement('div');d.className='cell';d.dataset.r=r;d.dataset.c=c;d.textContent=ch;el.appendChild(d)}))}function onSelect(cells){const key=cells.map(c=>`${c.r},${c.c}`).join('|');const hit=st.placed.find(p=>{const f=p.cells.map(c=>`${c.r},${c.c}`).join('|');const r=[...p.cells].reverse().map(c=>`${c.r},${c.c}`).join('|');return key===f||key===r});if(hit&&!st.found.has(hit.word)){st.found.add(hit.word);const wd=st.words.find(x=>x.word===hit.word);wd.found=true;const earn=10*wd.word.length*st.combo;Store.addCoins(earn);SelectionEngine.markFound(hit.cells,wd.color);emit('found',wd,earn);st.combo++;emit('combo',st.combo);if(st.found.size===st.words.length){stop();emit('victory')}}else{emit('error')}}function tick(){clearInterval(tm);tm=setInterval(()=>{if(!st.running)return;st.timer--;emit('tick',st.timer);if(st.timer<=0){stop();emit('defeat')}},1000)}function stop(){clearInterval(tm);st.running=false}function hint(){const t=st.words.find(w=>!w.found);if(!t)return false;const p=st.placed.find(x=>x.word===t.word);if(!p)return false;SelectionEngine.hintCell(p.cells[0].r,p.cells[0].c);return true}function addTime(s){st.timer+=s;emit('tick',st.timer)}return{start,on,get:()=>st,pause(){st.running=false},resume(){st.running=true},hint,addTime}})();
 
-const HUD={setTimer(t){document.getElementById('timer').textContent=t},setCombo(c){document.getElementById('combo').textContent=c},setCoins(c){document.getElementById('gameCoins').textContent=c;document.getElementById('homeCoins').textContent=c},renderWords(ws){const el=document.getElementById('wordChips');el.innerHTML='';ws.forEach(w=>{const s=document.createElement('span');s.className='chip';s.dataset.word=w.word;s.textContent=w.word;el.appendChild(s)})},markWordFound(w){document.querySelector(`.chip[data-word="${w}"]`)?.classList.add('found')},showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1200)}};
+const HUD={updCoins(){const c=Store.getCoins();document.getElementById('homeCoins').textContent=c;document.getElementById('gameCoins').textContent=c;document.getElementById('shopCoins').textContent=c},updInv(){const inv=Store.getInv();document.getElementById('badgeHint').textContent=inv.hint;document.getElementById('badgeTime').textContent=inv.time},setTimer(t){document.getElementById('timer').textContent=t},setCombo(c){document.getElementById('combo').textContent=c},renderWords(ws){const el=document.getElementById('wordChips');el.innerHTML='';ws.forEach(w=>{const s=document.createElement('span');s.className='chip';s.dataset.word=w.word;s.textContent=w.word;el.appendChild(s)})},markFound(w){document.querySelector(`.chip[data-word="${w}"]`)?.classList.add('found')},toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}};
 
-const Screens={show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')},renderThemes(cb){const g=document.getElementById('themeGrid');g.innerHTML='';WordData.themes.forEach(t=>{const b=document.createElement('button');b.className='theme-card';b.innerHTML=`<h3>${t.name}</h3><p>${t.levels.length} fases</p>`;b.onclick=()=>cb(t.id,0);g.appendChild(b)})}};
+const Shop={items:[{id:'hint',name:'Dica',desc:'Revela 1 letra',price:50},{id:'time',name:'+15s',desc:'Adiciona tempo',price:80}],open(){HUD.updCoins();render();Screens.show('screenShop')},buy(it){if(!Store.spendCoins(it.price)){HUD.toast('Moedas insuficientes');return}Store.addItem(it.id,1);HUD.updCoins();HUD.updInv();HUD.toast(`${it.name} comprado!`);render()}};function render(){const g=document.getElementById('shopGrid');g.innerHTML='';Shop.items.forEach(it=>{const d=document.createElement('div');d.className='shop-item';d.innerHTML=`<h3>${it.name}</h3><p>${it.desc}</p><div class="price">🪙 ${it.price}</div><button class="btn-primary">Comprar</button>`;d.querySelector('button').onclick=()=>Shop.buy(it);g.appendChild(d)})}
+
+const Screens={show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')},home(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('active'));this.show('screenHome')}};
 
 document.addEventListener('DOMContentLoaded',()=>{
-  HUD.setCoins(GameStorage.getCoins());
-  Screens.renderThemes((t,l)=>{const r=GameEngine.start(t,l);HUD.renderWords(r.words);HUD.setTimer(180);HUD.setCombo(1);Screens.show('screenGame')});
-  GameEngine.on('Tick',t=>HUD.setTimer(t));
-  GameEngine.on('Combo',c=>HUD.setCombo(c));
-  GameEngine.on('Found',(w,e)=>{HUD.markWordFound(w.word);HUD.showToast(`+${e} 🪙`);HUD.setCoins(GameStorage.getCoins())});
-  GameEngine.on('Error',()=>HUD.showToast('Tente outra vez'));
-  GameEngine.on('Victory',()=>{document.getElementById('vStats').textContent='Boa!';document.getElementById('screenVictory').classList.add('active')});
-  GameEngine.on('Defeat',()=>{document.getElementById('dReason').textContent='Acabou o tempo';document.getElementById('screenDefeat').classList.add('active')});
+  HUD.updCoins();HUD.updInv();
+  const grid=document.getElementById('themeGrid');WordData.themes.forEach(t=>{const b=document.createElement('button');b.className='theme-card';b.innerHTML=`<h3>${t.name}</h3><p>${t.levels.length} fases</p>`;b.onclick=()=>{const r=GameEngine.start(t.id,0);HUD.renderWords(r.words);HUD.setTimer(180);HUD.setCombo(1);HUD.updCoins();HUD.updInv();Screens.show('screenGame')};grid.appendChild(b)});
+  GameEngine.on('tick',t=>HUD.setTimer(t));
+  GameEngine.on('combo',c=>HUD.setCombo(c));
+  GameEngine.on('found',(w,e)=>{HUD.markFound(w.word);HUD.toast(`+${e} 🪙`);HUD.updCoins()});
+  GameEngine.on('error',()=>HUD.toast('Tente outra vez'));
+  GameEngine.on('victory',()=>{document.getElementById('vStats').textContent=`Moedas: ${Store.getCoins()}`;document.getElementById('screenVictory').classList.add('active')});
+  GameEngine.on('defeat',()=>{document.getElementById('dReason').textContent='Acabou o tempo';document.getElementById('screenDefeat').classList.add('active')});
+  document.getElementById('btnShop').onclick=()=>Shop.open();
+  document.getElementById('btnShopClose').onclick=()=>Screens.home();
   document.getElementById('btnPause').onclick=()=>{GameEngine.pause();document.getElementById('screenPause').classList.add('active')};
   document.getElementById('btnResume').onclick=()=>{document.getElementById('screenPause').classList.remove('active');GameEngine.resume()};
-  document.getElementById('btnQuit').onclick=()=>{document.getElementById('screenPause').classList.remove('active');Screens.show('screenHome')};
-  document.getElementById('btnVHome').onclick=()=>{document.getElementById('screenVictory').classList.remove('active');Screens.show('screenHome')};
-  document.getElementById('btnNext').onclick=()=>{const r=GameEngine.nextLevel();HUD.renderWords(r.words);document.getElementById('screenVictory').classList.remove('active');Screens.show('screenGame')};
-  document.getElementById('btnDHome').onclick=()=>{document.getElementById('screenDefeat').classList.remove('active');Screens.show('screenHome')};
-  document.getElementById('btnRetry').onclick=()=>{const r=GameEngine.restart();HUD.renderWords(r.words);document.getElementById('screenDefeat').classList.remove('active');Screens.show('screenGame')};
+  document.getElementById('btnQuit').onclick=()=>{document.getElementById('screenPause').classList.remove('active');Screens.home()};
+  document.getElementById('btnVHome').onclick=()=>{document.getElementById('screenVictory').classList.remove('active');Screens.home()};
+  document.getElementById('btnNext').onclick=()=>{const s=GameEngine.get();const th=WordData.themes.find(t=>t.id===s.theme);const nl=(s.level+1)%th.levels.length;const r=GameEngine.start(s.theme,nl);HUD.renderWords(r.words);document.getElementById('screenVictory').classList.remove('active');Screens.show('screenGame')};
+  document.getElementById('btnDHome').onclick=()=>{document.getElementById('screenDefeat').classList.remove('active');Screens.home()};
+  document.getElementById('btnRetry').onclick=()=>{const s=GameEngine.get();const r=GameEngine.start(s.theme,s.level);HUD.renderWords(r.words);document.getElementById('screenDefeat').classList.remove('active');Screens.show('screenGame')};
+  document.getElementById('btnHint').onclick=()=>{if(!Store.useItem('hint')){HUD.toast('Compre dicas na loja');return}if(GameEngine.hint()){HUD.updInv();HUD.toast('Dica usada')}else{HUD.toast('Nada para revelar')}};
+  document.getElementById('btnTime').onclick=()=>{if(!Store.useItem('time')){HUD.toast('Compre tempo na loja');return}GameEngine.addTime(15);HUD.updInv();HUD.toast('+15s')};
 });
 </script>
 </body>
