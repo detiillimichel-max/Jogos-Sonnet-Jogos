@@ -23,7 +23,7 @@ O **Elo Palavras** é um jogo de caça-palavras dinâmico, desenvolvido com foco
 
 ## 📱 Como Jogar
 
-1. Acesse o projeto pelo seu navegador (Desktop ou Mobile).
+1. Acesse o projeto pelo seu navegador (Desktop Mobile ou pelo aplicativo de mensagens https://oio-fam.lovable.app/) detiillimichel-max.github.io/Jogos-Sonnet-Jogos/
 2. Escolha uma categoria na tela inicial.
 3. Arraste o dedo ou o mouse sobre as letras para formar as palavras listadas.
 4. Tente completar o grid antes que o tempo acabe e sem cometer muitos erros para ganhar 3 estrelas!
