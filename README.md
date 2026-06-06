@@ -33,3 +33,6 @@ O **Elo Palavras** é um jogo de caça-palavras dinâmico, desenvolvido com foco
 ---
 
 *Projeto desenvolvido com dedicação para oferecer uma experiência de jogo rápida e imersiva.*
+© 2026 Michel Detilli.
+Todos os direitos reservados. 
+É permitido jogar online. É proibida a cópia, distribuição ou uso comercial do código sem autorização.
